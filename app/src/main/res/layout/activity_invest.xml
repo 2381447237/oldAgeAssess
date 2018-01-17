@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:background="#52b0f2"
+        android:layout_width="fill_parent"
+        android:layout_height="40dp">
+
+        <ImageView
+            android:id="@+id/iv_back_invest"
+            android:layout_gravity="center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/fh"/>
+
+        <TextView
+            android:id="@+id/tv_title_invest"
+            android:textSize="20sp"
+            android:textColor="#ffffff"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="姓 名"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:background="#ffffff"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <RadioGroup
+            android:id="@+id/rg"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <RadioButton
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:background="@drawable/sel_rb"
+                android:onClick="onChange"
+                android:id="@+id/rb_one"
+                android:textColor="@drawable/selector_text_size"
+                android:gravity="center"
+                android:button="@null"
+                android:checked="true"
+                android:text="诚\n信\n声\n明"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+            <RadioButton
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:background="@drawable/sel_rb"
+                android:onClick="onChange"
+                android:id="@+id/rb_two"
+                android:textColor="@drawable/selector_text_size"
+                android:gravity="center"
+                android:button="@null"
+                android:text="家\n庭\n状\n态"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+            <RadioButton
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:background="@drawable/sel_rb"
+                android:onClick="onChange"
+                android:id="@+id/rb_three"
+                android:textColor="@drawable/selector_text_size"
+                android:gravity="center"
+                android:button="@null"
+                android:text="基\n本\n项\n目"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+            <RadioButton
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:background="@drawable/sel_rb"
+                android:onClick="onChange"
+                android:id="@+id/rb_four"
+                android:textColor="@drawable/selector_text_size"
+                android:gravity="center"
+                android:button="@null"
+                android:text="总\n体\n状\n况"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+            <RadioButton
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:background="@drawable/sel_rb"
+                android:onClick="onChange"
+                android:id="@+id/rb_five"
+                android:textColor="@drawable/selector_text_size"
+                android:gravity="center"
+                android:button="@null"
+                android:text="疾\n病\n诊\n断"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+        </RadioGroup>
+
+        <View
+            android:visibility="gone"
+            android:layout_width="1dp"
+            android:layout_height="fill_parent"
+            android:background="#cccccc"/>
+
+        <FrameLayout
+           android:layout_marginLeft="10dp"
+            android:id="@+id/mainfl"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+        </FrameLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
