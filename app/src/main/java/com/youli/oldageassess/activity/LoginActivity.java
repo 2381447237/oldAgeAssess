@@ -139,7 +139,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
                                 String cookies = response.header("Set-Cookie").toString();
 
                                 String mycookies=cookies.substring(0,cookies.indexOf(";"));
-                                SharedPreferencesUtils.putString("cookie", mycookies);
+                                SharedPreferencesUtils.putString("cookies", mycookies);
 
                             }
                         }

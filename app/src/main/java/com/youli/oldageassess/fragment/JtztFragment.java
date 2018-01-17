@@ -35,6 +35,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
@@ -45,8 +46,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Created by liutao on 2018/1/13.
@@ -220,8 +223,12 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 String answerString = parseAnswerInfo(list);
 
                 Log.e("2018-1-16","answerString="+answerString);
-                shujuliu= answerString.getBytes();
-                submitCom();
+                try {
+                    shujuliu= answerString.getBytes("UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                submitCom(answerString);
                 btnLast.setVisibility(View.VISIBLE);
 
                 index++;
@@ -782,7 +789,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
          }
 
     //提交答案
-    private void submitCom(){
+    private void submitCom(final String answerString){
 
         final HttpClient client = new DefaultHttpClient();
 
@@ -800,13 +807,9 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                             post.setHeader("cookie", cookies);
                             if (shujuliu!=null) {
                                 Log.e("2018-1-16","企业提交shujuliu"+new String(shujuliu));
-                                String str = Base64.encodeToString(shujuliu, Base64.DEFAULT);
-                                StringEntity stringEntity = new StringEntity(str);
-                                stringEntity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE,
-                                        "application/json"));
-                                stringEntity.setContentEncoding(new BasicHeader(
-                                        HTTP.CONTENT_ENCODING, HTTP.UTF_8));
-                                post.setEntity(stringEntity);
+                                ByteArrayEntity arrayEntity = new ByteArrayEntity(shujuliu);
+                                arrayEntity.setContentType("application/octet-stream");
+                                post.setEntity(arrayEntity);
                             }
 
                             HttpResponse response = client.execute(post);
@@ -822,7 +825,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                                 getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        if(TextUtils.equals(str,"True")){
+                                        if(firstIsNumber(str)){
                                             Toast.makeText(getActivity(),"提交成功!",Toast.LENGTH_SHORT).show();
 
 
@@ -847,6 +850,29 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
         ).start();
 
+    }
+
+
+    private boolean firstIsNumber(String response){
+
+       if(response.length()>0) {
+
+           if (isInteger(response.substring(0, 1))) {
+               return true;
+           }
+       }
+
+
+            return false;
+
+
+    }
+
+    //判断字符串是否是数字
+
+    private  boolean isInteger(String str) {
+        Pattern pattern = Pattern.compile("^[-\\+]?[\\d]*$");
+        return pattern.matcher(str).matches();
     }
 
 }
