@@ -8,6 +8,8 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.widget.TextView;
 
+import java.util.regex.Pattern;
+
 /**
  * Created by liutao on 2018/1/12.
  */
@@ -33,5 +35,26 @@ public class TextViewUtils {
         return  para;
 
     }
+
+    public static boolean firstIsNumber(String response){
+
+        if(response.length()>0) {
+
+            if (isInteger(response.substring(0, 1))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+    //判断字符串是否是数字
+
+    public static boolean isInteger(String str) {
+        Pattern pattern = Pattern.compile("^[-\\+]?[\\d]*$");
+        return pattern.matcher(str).matches();
+    }
+
 
 }

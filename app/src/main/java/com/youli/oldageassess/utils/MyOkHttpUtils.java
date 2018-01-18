@@ -1,10 +1,21 @@
 package com.youli.oldageassess.utils;
 
+import android.app.Activity;
 import android.util.Log;
+import android.widget.Toast;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import okhttp3.FormBody;
 import okhttp3.MediaType;
@@ -141,8 +152,6 @@ public class MyOkHttpUtils {
         return response;
 
     };
-
-
 
     //修改密码http://web.youli.pw:89/Json/Set_Pwd.aspx?pwd=123&new_pwd=321
     public static Response okHttpPostFormBody(String url, HashMap<String,String> data){

@@ -179,49 +179,4 @@ public class InvestActivity extends FragmentActivity {
 
     }
 
-//    //诚信声明fragment
-//    public CxsmFragment getCxsmFragment(){
-//
-//        FragmentManager sfm=getSupportFragmentManager();
-//        CxsmFragment cxsmFragment= (CxsmFragment) sfm.findFragmentByTag("cxsmF");
-//
-//        return  cxsmFragment;
-//    }
-//
-//    //家庭状态fragment
-//    public JtztFragment getJtztFragment(){
-//
-//        FragmentManager sfm=getSupportFragmentManager();
-//        JtztFragment jtztFragment= (JtztFragment) sfm.findFragmentByTag("jtztF");
-//
-//        return  jtztFragment;
-//    }
-//
-//    //基本项目fragment
-//    public JbxmFragment getJbxmFragment(){
-//
-//        FragmentManager sfm=getSupportFragmentManager();
-//        JbxmFragment jbxmFragment= (JbxmFragment) sfm.findFragmentByTag("jbxmF");
-//
-//        return  jbxmFragment;
-//    }
-//
-//    //总体状况fragment
-//    public ZtzkFragment getZtzkFragment(){
-//
-//        FragmentManager sfm=getSupportFragmentManager();
-//        ZtzkFragment ztzkFragment= (ZtzkFragment) sfm.findFragmentByTag("ztzkF");
-//
-//        return  ztzkFragment;
-//    }
-//
-//    //疾病诊断fragment
-//    public JbzdFragment getJbzdFragment(){
-//
-//        FragmentManager sfm=getSupportFragmentManager();
-//        JbzdFragment jbzdFragment= (JbzdFragment) sfm.findFragmentByTag("jbzdF");
-//
-//        return  jbzdFragment;
-//    }
-
 }

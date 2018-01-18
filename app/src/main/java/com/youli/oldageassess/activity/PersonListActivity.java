@@ -26,6 +26,7 @@ import com.youli.oldageassess.adapter.CommonViewHolder;
 import com.youli.oldageassess.entity.InvestInfo;
 import com.youli.oldageassess.entity.PersonInfo;
 import com.youli.oldageassess.utils.MyOkHttpUtils;
+import com.youli.oldageassess.utils.ProgressDialogUtils;
 import com.youli.oldageassess.utils.TextViewUtils;
 
 import java.util.ArrayList;
@@ -42,6 +43,10 @@ import okhttp3.Response;
 public class PersonListActivity extends BaseActivity implements View.OnClickListener{
 
     private Context mContext=this;
+
+    //private int lvClickNum;
+
+
 
     private final int SUCCEED=10001;
     private final int SUCCEED_NODATA=10002;
@@ -65,7 +70,7 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-
+            ProgressDialogUtils.dismissMyProgressDialog(mContext);
             switch (msg.what){
 
                 case SUCCEED:
@@ -92,12 +97,15 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
 
                     break;
                 case PROBLEM:
+
                     Toast.makeText(mContext,"网络不给力",Toast.LENGTH_SHORT).show();
                     if(lv.isRefreshing()) {
                         lv.onRefreshComplete();//停止刷新或加载更多
                     }
+
                     break;
                 case SUCCEED_NODATA:
+
                     tvNum.setVisibility(View.GONE);
                     Toast.makeText(mContext,"暂无数据",Toast.LENGTH_SHORT).show();
 //                    if(data.size()==0) {
@@ -107,6 +115,7 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
                     if(lv.isRefreshing()) {
                         lv.onRefreshComplete();//停止刷新或加载更多
                     }
+
                     break;
                 case OVERTIME:
 
@@ -118,10 +127,13 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
 
                 case SUCCEED_INVEST:
 
-                    Intent intent=new Intent(mContext,InvestActivity.class);
-                    intent.putExtra("pInfo",data.get(msg.arg1-1));
-                    intent.putExtra("investInfo",(ArrayList<InvestInfo>)(msg.obj));
-                    startActivity(intent);
+
+                        Intent intent = new Intent(mContext, InvestActivity.class);
+                        intent.putExtra("pInfo", data.get(msg.arg1 - 1));
+                        intent.putExtra("investInfo", (ArrayList<InvestInfo>) (msg.obj));
+                        startActivity(intent);
+
+
 
                     break;
 
@@ -140,6 +152,8 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
 
         typeId=getIntent().getIntExtra("type",0);
 
+
+
         initViews();
     }
 
@@ -157,8 +171,9 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
+                  ProgressDialogUtils.showMyProgressDialog(mContext);
+                   getInvestInfo(i);
 
-                getInvestInfo(i);
 
             }
         });
