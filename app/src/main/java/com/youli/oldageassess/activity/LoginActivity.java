@@ -30,6 +30,8 @@ import java.io.IOException;
 
 import okhttp3.Response;
 
+
+
 public class LoginActivity extends BaseActivity implements View.OnClickListener{
 
     private Context mContext=this;
@@ -103,8 +105,8 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
         setContentView(R.layout.activity_login);
 
         // 更新apk
-//        UpdateManager manager = new UpdateManager(LoginActivity.this);
-//        manager.checkUpdate();
+        UpdateManager manager = new UpdateManager(LoginActivity.this);
+        manager.checkUpdate();
 
         initViews();
     }

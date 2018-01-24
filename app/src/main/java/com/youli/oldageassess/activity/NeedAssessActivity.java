@@ -45,7 +45,7 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
     private Context mContext=this;
     private ImageView ivWdc,ivYdc;
 
-    private int adminId;//操作员ID
+    private AdminInfo adminInfo;//操作员信息
 
     private Handler mHandler = new Handler() {
 
@@ -56,7 +56,7 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
 
                 case SUCCEED://信息获取成功
 
-                    adminId=((AdminInfo)(msg.obj)).getID();
+                    adminInfo=(AdminInfo)(msg.obj);
                     ivWdc.setEnabled(true);
                     ivYdc.setEnabled(true);
 
@@ -166,11 +166,10 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
 
             case R.id.iv_wdc_need_assess://未调查
 
-                Log.e("2018-1-23","未调查=="+adminId);
 
                  i=new Intent(mContext,PersonListActivity.class);
                  i.putExtra("type",1);
-                 i.putExtra("adminId",adminId);
+                 i.putExtra("adminInfo",adminInfo);
                  startActivity(i);
 
                 break;
@@ -179,7 +178,7 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
 
                 i=new Intent(mContext,PersonListActivity.class);
                 i.putExtra("type",2);
-                i.putExtra("adminId",adminId);
+                i.putExtra("adminInfo",adminInfo);
                 startActivity(i);
                 break;
         }

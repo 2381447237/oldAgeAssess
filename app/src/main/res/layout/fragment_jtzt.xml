@@ -39,8 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginRight="20dp"
-        android:layout_marginLeft="20dp">
+        >
 
         <Button
             android:background="@drawable/btn_wenjuan_selector"
@@ -102,6 +101,32 @@
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:text="提交"/>
+
+        <Button
+            android:visibility="gone"
+            android:background="@drawable/btn_wenjuan_selector"
+            android:textColor="#ffffff"
+            android:layout_margin="10dp"
+            android:id="@+id/btn_last_page"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="上一页"/>
+
+        <Button
+            android:visibility="gone"
+            android:background="@drawable/btn_wenjuan_selector"
+            android:textColor="#ffffff"
+            android:layout_margin="10dp"
+            android:id="@+id/btn_next_page"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="下一页"/>
+
+        <TextView
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3/5页"/>
 
     </LinearLayout>
 

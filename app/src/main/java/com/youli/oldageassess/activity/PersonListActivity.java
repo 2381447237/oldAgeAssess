@@ -23,6 +23,8 @@ import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.youli.oldageassess.R;
 import com.youli.oldageassess.adapter.CommonAdapter;
 import com.youli.oldageassess.adapter.CommonViewHolder;
+import com.youli.oldageassess.entity.AdminInfo;
+import com.youli.oldageassess.entity.AnswerInfo;
 import com.youli.oldageassess.entity.InvestInfo;
 import com.youli.oldageassess.entity.PersonInfo;
 import com.youli.oldageassess.utils.MyOkHttpUtils;
@@ -54,8 +56,8 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
 
     private ImageView ivBack;
 
-    private int typeId,adminId;
-
+    private int typeId;
+    private AdminInfo adminInfo;//操作员信息
     private PullToRefreshListView lv;
     private TextView tvNum,tvTitle;
     private List<PersonInfo> data=new ArrayList<>();
@@ -127,7 +129,7 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
                         Intent intent = new Intent(mContext, InvestActivity.class);
                         intent.putExtra("pInfo", data.get(msg.arg1 - 1));
                         intent.putExtra("type",typeId);
-                         intent.putExtra("adminId",adminId);
+                         intent.putExtra("adminInfo",adminInfo);
                         startActivity(intent);
 
 
@@ -148,7 +150,7 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
 
         typeId=getIntent().getIntExtra("type",0);
 
-        adminId=getIntent().getIntExtra("adminId",0);
+        adminInfo=(AdminInfo) (getIntent().getSerializableExtra("adminInfo"));
 
         initViews();
     }

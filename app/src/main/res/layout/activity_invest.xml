@@ -135,7 +135,7 @@
             android:background="#cccccc"/>
 
         <FrameLayout
-           android:layout_marginLeft="10dp"
+           android:layout_marginLeft="5dp"
             android:id="@+id/mainfl"
             android:layout_width="0dp"
             android:layout_height="match_parent"

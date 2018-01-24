@@ -87,7 +87,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
     private ProgressDialog pd;
 
-    private Button btnLast, btnNext, btnAll, btnRestart, btnSubmit;
+    private Button btnLast,btnNext,btnAll,btnRestart,btnSubmit,btnLastPage,btnNextPage;
 
     private LinearLayout llInvest;//所有问卷的信息的布局
 
@@ -130,6 +130,10 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
     private int typeId;//他等于1时是未答，他等于2时是已答
 
     private boolean isZbzd=false;//判断是否是疾病诊断
+
+    private int PageIndex=1;//当前页
+
+    private int PageNum;//总的页数
 
     private Handler handler=new Handler();
 
@@ -236,10 +240,14 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         btnSubmit = view.findViewById(R.id.btn_submit);
         btnSubmit.setOnClickListener(this);
 
+        btnLastPage=view.findViewById(R.id.btn_last_page);
+        btnLastPage.setOnClickListener(this);
+        btnNextPage=view.findViewById(R.id.btn_next_page);
+        btnNextPage.setOnClickListener(this);
         Log.e("2018-1-22","FragmentTypeId=="+typeId);
 
      //   if(typeId==1) {
-           // showFirst();//默认显示第一题
+        //   showFirst();//默认显示第一题
 
         showPageData();//展示部分
 
@@ -282,7 +290,11 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
     }
 
-    private void showPageData(){
+    //总条数是50
+    //每次显示10条
+    //PageIndex=5
+
+    private void showPageData() {
 
         btnRestart.setVisibility(View.VISIBLE);
         btnSubmit.setVisibility(View.VISIBLE);
@@ -298,7 +310,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         }
 
     }
-
     @Override
     public void onClick(View view) {
 
@@ -310,7 +321,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 btnAll.setVisibility(View.GONE);
 
                 if (index == 0) {
-                    Toast.makeText(getActivity(), "已经是第一题了", Toast.LENGTH_SHORT).show();
+                    showLastDialog("first");
                     return;
                 }
 
@@ -402,7 +413,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
                 if(isZbzd){
 
-                    Toast.makeText(getActivity(), "已经是最后一题了", Toast.LENGTH_SHORT).show();
+                    showLastDialog("last");
                     btnAll.setVisibility(View.VISIBLE);
                     return;
 
@@ -458,7 +469,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                             }
                         }
                        }
-                  //  }
                 }
                 if (myLevelNum == 2 && tempSmallWenJuan.size() > 0 && !checkRadioIsChecked(answerInfo, questionNo) && (TextUtils.equals("单选", questionInutType))) {//这个if里面是用来判断二级单选是否做完
                     Toast.makeText(getActivity(), "答案不能为空!", Toast.LENGTH_SHORT).show();
@@ -504,7 +514,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     return;
 
                 if (index == questionInfos.size() - 1) {
-                    Toast.makeText(getActivity(), "已经是最后一题了", Toast.LENGTH_SHORT).show();
+                    showLastDialog("last");
                     btnAll.setVisibility(View.VISIBLE);
                     return;
                 }
@@ -613,16 +623,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-
-
-
                 //2018-1-17==提交答案
-
-
-//                btnLast.setVisibility(View.VISIBLE);
-//                index++;
-//                currentInfo = questionInfos.get(index);
-//                checkRb(currentInfo.getTYPE_ID());
 
                 if(index==0){
                     currentInfo=null;
@@ -673,6 +674,41 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
             case R.id.btn_submit://提交
                 showAlertDialog("submit");
+                break;
+
+
+            case   R.id.btn_last_page://上一页
+
+                llInvest.removeAllViews();
+                PageIndex--;
+                if (PageIndex>=0) {
+                    for (int i = 10*PageIndex; i < 10*PageIndex+10; i++) {
+                        fretchTree(i, llInvest, questionInfos.get(i), "all");
+
+                    }
+                }else{
+                    Toast.makeText(getActivity(), "当前已经是第一页了!",
+                            Toast.LENGTH_SHORT).show();
+                }
+
+                Toast.makeText(getActivity(), "上一页!",
+                        Toast.LENGTH_SHORT).show();
+
+                break;
+
+            case   R.id.btn_next_page://下一页
+
+                llInvest.removeAllViews();
+                PageIndex++;
+                if (PageIndex <= PageNum) {
+                    for (int i = 10*PageIndex; i < 10*PageIndex+10; i++) {
+                        fretchTree(i, llInvest, questionInfos.get(i), "all");
+
+                    }
+                }
+
+                Toast.makeText(getActivity(), "下一页!",
+                        Toast.LENGTH_SHORT).show();
                 break;
         }
 
@@ -2189,7 +2225,7 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
 
                         //http://web.youli.pw:81/Json/Get_Staff.aspx
 
-                        String  url = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + personInfo.getSQH() + "&RECEIVED_STAFF1="+((InvestActivity)getActivity()).adminId+ "&RECEIVED_STAFF2="+((InvestActivity)getActivity()).adminId;
+                        String  url = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + personInfo.getSQH() + "&RECEIVED_STAFF1="+((InvestActivity)getActivity()).adminInfo.getID()+ "&RECEIVED_STAFF2="+((InvestActivity)getActivity()).adminInfo.getID();
 
                         Log.e("2018-1-23","最后的url=="+url);
                         Response response=MyOkHttpUtils.okHttpGet(url);
@@ -2229,6 +2265,31 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
 
         ).start();
 
+
+    }
+
+    private void showLastDialog(String mark){
+
+        String contentStr = null;
+
+        if(TextUtils.equals(mark,"last")){
+            contentStr="当前已经是最后一题了！";
+        } else if (TextUtils.equals(mark, "first")) {
+            contentStr="当前已经是第一题了！";
+        }
+
+        final AlertDialog.Builder builder=new AlertDialog.Builder(getActivity());
+        builder.setCancelable(false);
+        builder.setTitle("温馨提示");
+        builder.setMessage(contentStr);
+        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+
+        builder.show();
 
     }
 

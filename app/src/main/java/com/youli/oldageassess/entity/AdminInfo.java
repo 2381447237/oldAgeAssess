@@ -1,5 +1,7 @@
 package com.youli.oldageassess.entity;
 
+import java.io.Serializable;
+
 /**
  * Created by liutao on 2018/1/23.
  *
@@ -8,7 +10,7 @@ package com.youli.oldageassess.entity;
  * 操作员信息
  */
 
-public class AdminInfo {
+public class AdminInfo implements Serializable{
 
 
     /**

@@ -100,14 +100,17 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
                 case SUCCEED_NEXT://下一题的提交
                     btnNext.setEnabled(true);
                     btnLast.setVisibility(View.VISIBLE);
+                    Log.e("2018-1-23","下一题的提交成功");
+                    if (index == threeInfoList.size() - 1) {
+                        btnNext.setEnabled(false);
+                        showLastDialog("last");
+                        btnFinsh.setVisibility(View.VISIBLE);
+                        return;
+                    }
                     index++;
                     currentInfo=threeInfoList.get(index);
                     drawLayout(llInvest,threeInfoList.get(index));
 
-
-                    //   Toast.makeText(getActivity(), "下一题的提交成功", Toast.LENGTH_SHORT).show();
-
-                    Log.e("2018-1-23","下一题的提交成功");
                     break;
                 case SUCCEED_ALL://提交大标题
                     Intent intent=new Intent();
@@ -209,8 +212,9 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
 
             case R.id.btn_last://上一题
                 btnFinsh.setVisibility(View.GONE);
+                btnNext.setEnabled(true);
                 if (index == 0) {
-                    Toast.makeText(mContext, "已经是第一题了", Toast.LENGTH_SHORT).show();
+                    showLastDialog("first");
                     return;
                 }
 
@@ -221,7 +225,6 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
 
                                         if(fourList.getPARENT_ID()==threeInfoList.get(index).getID()&&fourList.getID()==radioButton.getId()) {
                                             radioButton.setChecked(false);
-                                            Log.e("2018-1-22", "radioButton.getId()==" + radioButton.getId());
                                         }
                                     }
                     }
@@ -232,12 +235,12 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
             case R.id.btn_next://下一题
 
                 btnLast.setVisibility(View.VISIBLE);
-                if (index == threeInfoList.size() - 1) {
-
-                    Toast.makeText(mContext, "已经是最后一题了", Toast.LENGTH_SHORT).show();
-                    btnFinsh.setVisibility(View.VISIBLE);
-                    return;
-                }
+//                if (index == threeInfoList.size() - 1) {
+//
+//                    Toast.makeText(mContext, "已经是最后一题了", Toast.LENGTH_SHORT).show();
+//                    btnFinsh.setVisibility(View.VISIBLE);
+//                   return;
+//                }
                 InvestInfo info = threeInfoList.get(index);
                 List<AnswerInfo> list = new ArrayList<>();
                 list = getAnswerInfo(info);
@@ -544,6 +547,31 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
 
             }
         });
+        builder.show();
+
+    }
+
+    private void showLastDialog(String mark){
+
+        String contentStr = null;
+        
+        if(TextUtils.equals(mark,"last")){
+            contentStr="当前已经是最后一题了！";
+        } else if (TextUtils.equals(mark, "first")) {
+            contentStr="当前已经是第一题了！";
+        }
+        
+        final AlertDialog.Builder builder=new AlertDialog.Builder(this);
+        builder.setCancelable(false);
+        builder.setTitle("温馨提示");
+        builder.setMessage(contentStr);
+        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+
         builder.show();
 
     }

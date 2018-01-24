@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.youli.oldageassess.R;
+import com.youli.oldageassess.entity.AdminInfo;
 import com.youli.oldageassess.entity.InvestInfo;
 import com.youli.oldageassess.entity.PersonInfo;
 import com.youli.oldageassess.fragment.CxsmFragment;
@@ -79,7 +80,7 @@ public class InvestActivity extends FragmentActivity {
     public List<InvestInfo> jtztList=new ArrayList<>();
 
     public int typeId;//他等于1时是未答，他等于2时是已答，
-    public int  adminId;//操作员ID
+    public AdminInfo adminInfo;//操作员信息
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -87,7 +88,7 @@ public class InvestActivity extends FragmentActivity {
         setContentView(R.layout.activity_invest);
 
         pInfo=(PersonInfo)getIntent().getSerializableExtra("pInfo");
-        adminId=getIntent().getIntExtra("adminId",0);
+        adminInfo=(AdminInfo) getIntent().getSerializableExtra("adminInfo");
         typeId=getIntent().getIntExtra("type",0);
 
         Log.e("2018-1-22","typeId=="+typeId);
@@ -114,11 +115,11 @@ public class InvestActivity extends FragmentActivity {
 
 
         for(InvestInfo info:PersonListActivity.investInfo){
-          //  if(info.getTYPE_ID()==5){
+            //if(info.getTYPE_ID()==5){
 
                 jtztList.add(info);
 
-   //  }
+    // }
 
         }
 
