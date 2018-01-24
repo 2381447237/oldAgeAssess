@@ -32,8 +32,8 @@ public class MyOkHttpUtils {
     //mdiatype 这个需要和服务端保持一致
     private static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
 
-    public static final String BaseUrl="http://web.youli.pw:81";
-
+   // public static final String BaseUrl="http://web.youli.pw:81";
+    public static final String BaseUrl="http://183.194.4.58:81/";
     public static OkHttpClient okHttpClient=null;
 
     static String cookies;
@@ -46,7 +46,10 @@ public class MyOkHttpUtils {
               okHttpClient=new OkHttpClient();
 
           }
-        cookies=SharedPreferencesUtils.getString("cookie");
+        cookies=SharedPreferencesUtils.getString("cookies");
+
+
+
           return  okHttpClient;
     }
 
@@ -60,6 +63,8 @@ public class MyOkHttpUtils {
 
     public static Response okHttpGet(String url){
         getInstance();
+
+       // String cookies = SharedPreferencesUtils.getString("cookies");
 
         Request request=new Request.Builder().addHeader("cookie",cookies).url(url).build();
 
@@ -96,7 +101,7 @@ public class MyOkHttpUtils {
 
         RequestBody requestBody=builder.build();
 
-        Request request=new Request.Builder().addHeader("cookie",cookies).url(url).post(requestBody).build();
+        Request request=new Request.Builder().addHeader("cookies",cookies).url(url).post(requestBody).build();
 
         Response response=null;
 
@@ -138,7 +143,7 @@ public class MyOkHttpUtils {
         RequestBody requestBody=new FormBody.Builder().add("sfz", userName)
                 .build();
 
-        Request request=new Request.Builder().addHeader("cookie",cookies).url(url).post(requestBody).build();
+        Request request=new Request.Builder().addHeader("cookies",cookies).url(url).post(requestBody).build();
 
         Response response=null;
 

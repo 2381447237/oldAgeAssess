@@ -1,4 +1,11 @@
 <resources>
     <!--<string name="app_name">OldAgeAssess</string>-->
-    <string name="app_name">上海市老年照顾服务需求评估</string>
+    <string name="app_name">上海市老年照护需求评估系统</string>
+    <string name="soft_update_no">已是最新版本</string>
+    <string name="soft_update_title">版本更新</string>
+    <string name="soft_update_info">有最新版本，是否更新</string>
+    <string name="soft_update_updatebtn">现在更新</string>
+    <string name="soft_update_later">以后更新</string>
+    <string name="soft_updating">版本更新</string>
+    <string name="soft_update_cancel">取消</string>
 </resources>

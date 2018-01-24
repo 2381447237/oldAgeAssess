@@ -6,6 +6,8 @@ import java.io.Serializable;
  * Created by liutao on 2018/1/13.
  *
  * http://web.youli.pw:81/Json/Get_Qa_Detil_Special.aspx
+ *
+ * http://183.194.4.58:81/Json/Get_Qa_Detil_Special.aspx
  */
 
 public class InvestInfo implements Serializable{
@@ -203,5 +205,14 @@ public class InvestInfo implements Serializable{
 
     public void setTreeLevel(int TreeLevel) {
         this.TreeLevel = TreeLevel;
+    }
+
+
+    @Override
+    public String toString() {
+        return "InvestInfo{" +
+                "TITLE_L='" + TITLE_L + '\'' +
+                ", TITLE_R='" + TITLE_R + '\'' +
+                '}';
     }
 }

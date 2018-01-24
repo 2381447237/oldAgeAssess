@@ -43,11 +43,7 @@ import okhttp3.Response;
 public class PersonListActivity extends BaseActivity implements View.OnClickListener{
 
     private Context mContext=this;
-
     //private int lvClickNum;
-
-
-
     private final int SUCCEED=10001;
     private final int SUCCEED_NODATA=10002;
     private final int SUCCEED_INVEST=10003;
@@ -58,10 +54,10 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
 
     private ImageView ivBack;
 
-    private int typeId;
+    private int typeId,adminId;
 
     private PullToRefreshListView lv;
-    private TextView tvNum;
+    private TextView tvNum,tvTitle;
     private List<PersonInfo> data=new ArrayList<>();
     private CommonAdapter adapter;
 
@@ -126,11 +122,12 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
                     break;
 
                 case SUCCEED_INVEST:
-
+                         investInfo=(ArrayList<InvestInfo>) (msg.obj);
 
                         Intent intent = new Intent(mContext, InvestActivity.class);
                         intent.putExtra("pInfo", data.get(msg.arg1 - 1));
-                        intent.putExtra("investInfo", (ArrayList<InvestInfo>) (msg.obj));
+                        intent.putExtra("type",typeId);
+                         intent.putExtra("adminId",adminId);
                         startActivity(intent);
 
 
@@ -142,8 +139,7 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
         }
     };
 
-
-
+  public static List<InvestInfo> investInfo;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -152,7 +148,7 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
 
         typeId=getIntent().getIntExtra("type",0);
 
-
+        adminId=getIntent().getIntExtra("adminId",0);
 
         initViews();
     }
@@ -163,6 +159,12 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
         ivBack.setOnClickListener(this);
 
         tvNum=findViewById(R.id.tv_num_person_list);
+        tvTitle=findViewById(R.id.tv_title_person_list);
+        if(typeId==1){
+            tvTitle.setText("待 调 查 人 员 名 单");
+        }else if(typeId==2){
+            tvTitle.setText("已 调 查 人 员 名 单");
+        }
 
         lv=findViewById(R.id.lv_person_list);
 
@@ -173,7 +175,10 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
 
                   ProgressDialogUtils.showMyProgressDialog(mContext);
                    getInvestInfo(i);
-
+          //      Intent intent = new Intent(mContext, InvestActivity.class);
+//                intent.putExtra("pInfo", data.get(msg.arg1 - 1));
+//                intent.putExtra("investInfo", (ArrayList<InvestInfo>) (msg.obj));
+            //    startActivity(intent);
 
             }
         });
@@ -272,17 +277,22 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
                         ivSex.setImageResource(R.drawable.nv);
                     }
                     TextView tvAge = holder.getView(R.id.tv_age_item_person_list);
-                    tvAge.setText("xx岁");
+                    tvAge.setText(item.getAge()+"岁");
+
                     TextView tvDate = holder.getView(R.id.tv_date_item_person_list);
-                    SpannableString ss=new SpannableString("2018-01-12(未填)");
-                    TextViewUtils.titleTvSetStyle("2018-01-12(未填)",ss,"(未填)");
-                    tvDate.setText(ss);
+                    if(typeId==1) {
+                        SpannableString ss = new SpannableString("2018-01-12(未填)");
+                        TextViewUtils.titleTvSetStyle("2018-01-12(未填)", ss, "(未填)");
+                        tvDate.setText(ss);
+                    }else{
+                        tvDate.setText("2018-01-12");
+                    }
                     TextView tvPhone = holder.getView(R.id.tv_phone_item_person_list);
                     tvPhone.setText(item.getSJHM());
                     TextView tvSfz = holder.getView(R.id.tv_sfz_item_person_list);
                     tvSfz.setText(item.getSFZH());
                     TextView tvAddress = holder.getView(R.id.tv_address_item_person_list);
-                    tvAddress.setText(item.getZZL()+item.getZZN()+item.getZZH()+item.getZZS());
+                    tvAddress.setText(item.getZZL()+"路"+item.getZZN()+"弄"+item.getZZH()+"号"+item.getZZS()+"室");
                     TextView tvXzdc = holder.getView(R.id.tv_xzdc_item_person_list);
                    // tvXzdc.setText(item.getXzdc());
 
@@ -372,5 +382,6 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
         ).start();
 
     }
+
 
 }

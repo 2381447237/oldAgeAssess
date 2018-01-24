@@ -4,6 +4,7 @@
     android:layout_height="match_parent">
 
     <TextView
+        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="一、调查对象及其家庭情况"/>
@@ -23,6 +24,7 @@
             android:orientation="vertical">
 
             <LinearLayout
+                android:paddingTop="10dp"
                 android:orientation="vertical"
                 android:id="@+id/ll"
                 android:layout_width="match_parent"

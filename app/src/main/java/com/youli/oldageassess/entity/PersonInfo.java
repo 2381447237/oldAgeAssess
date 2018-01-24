@@ -99,7 +99,6 @@ public class PersonInfo implements Serializable{
     private String SJD;//时间段('0'=上午;'1'=下午)
     private String FWLX;//服务类型('1'=养老机构照护;'2'=社区居家照护;'3'=住院医疗护理)
     private String SQFWJGMC;//申请服务机构代码
-    private String SFDB;//是否低保('0'=是;'1'=否)
     private String SFDSR;//是否低收入('0'=是;'1'=否)
     private String FJS;//绿色通道附件结构
     private Object FJ;//绿色通道附件
@@ -111,6 +110,72 @@ public class PersonInfo implements Serializable{
     private Object RECEIVED_STAFF2;
     private Object RECEIVED_TIME;
     private int RecordCount;
+
+    private String HJD_Name;//户籍街道
+    private String HJW_Name;//户籍居委
+    private String ZJD_Name;//居住街道
+    private String ZJW_Name;//居住居委
+    private int Age;//年龄
+
+    private String HJQX_Name;//户籍区县
+    private String ZZQX_Name;//居住区县
+    private String SFDB;//是否低保 0是1否
+
+    public String getHJQX_Name() {
+        return HJQX_Name;
+    }
+
+    public void setHJQX_Name(String HJQX_Name) {
+        this.HJQX_Name = HJQX_Name;
+    }
+
+    public String getZZQX_Name() {
+        return ZZQX_Name;
+    }
+
+    public void setZZQX_Name(String ZZQX_Name) {
+        this.ZZQX_Name = ZZQX_Name;
+    }
+
+    public String getHJD_Name() {
+        return HJD_Name;
+    }
+
+    public void setHJD_Name(String HJD_Name) {
+        this.HJD_Name = HJD_Name;
+    }
+
+    public String getHJW_Name() {
+        return HJW_Name;
+    }
+
+    public void setHJW_Name(String HJW_Name) {
+        this.HJW_Name = HJW_Name;
+    }
+
+    public String getZJD_Name() {
+        return ZJD_Name;
+    }
+
+    public void setZJD_Name(String ZJD_Name) {
+        this.ZJD_Name = ZJD_Name;
+    }
+
+    public String getZJW_Name() {
+        return ZJW_Name;
+    }
+
+    public void setZJW_Name(String ZJW_Name) {
+        this.ZJW_Name = ZJW_Name;
+    }
+
+    public int getAge() {
+        return Age;
+    }
+
+    public void setAge(int age) {
+        Age = age;
+    }
 
     public String getXM() {
         return XM;

@@ -36,6 +36,16 @@ public class TextViewUtils {
 
     }
 
+    //给每个字符串后面加一个空格
+    public  static String appendOneSpace(String para){
+
+        String regex = "(.{1})";
+        para = para.replaceAll(regex,"$1\t");
+
+        return  para;
+
+    }
+
     public static boolean firstIsNumber(String response){
 
         if(response.length()>0) {

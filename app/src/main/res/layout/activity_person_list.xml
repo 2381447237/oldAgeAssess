@@ -6,7 +6,7 @@
     android:orientation="vertical"
     xmlns:ptr="http://schemas.android.com/tools">
 
-    <LinearLayout
+    <RelativeLayout
         android:orientation="horizontal"
         android:background="#52b0f2"
         android:layout_width="fill_parent"
@@ -14,33 +14,32 @@
 
         <ImageView
             android:id="@+id/iv_back_person_list"
-            android:layout_gravity="center_vertical"
+            android:layout_centerVertical="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/fh"/>
 
         <TextView
+            android:id="@+id/tv_title_person_list"
             android:textSize="20sp"
             android:textColor="#ffffff"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:layout_width="0dp"
-            android:layout_weight="1"
+           android:layout_centerInParent="true"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="待 调 查 人 员 名 单"/>
 
         <!--android:text="共有100人"-->
 
         <TextView
-            android:visibility="gone"
+            android:layout_alignParentRight="true"
             android:paddingRight="5dp"
             android:textColor="#ffffff"
             android:id="@+id/tv_num_person_list"
-            android:layout_gravity="center_vertical"
+            android:layout_centerVertical="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-    </LinearLayout>
+    </RelativeLayout>
 
     <!--<ListView-->
         <!--android:divider="@null"-->

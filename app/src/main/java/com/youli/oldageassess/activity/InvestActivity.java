@@ -3,6 +3,7 @@ package com.youli.oldageassess.activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
@@ -14,6 +15,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -42,6 +44,7 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -69,12 +72,14 @@ public class InvestActivity extends FragmentActivity {
 
     private TextView tvTitle;
 
-    private PersonInfo pInfo;
-
+    public PersonInfo pInfo;
+    public HashMap<String,Button> map=new HashMap<>();
     public RadioButton rbOne,rbTwo,rbThree,rbFour,rbFive;
 
-    private List<InvestInfo> investInfo;
-    private List<InvestInfo> jtztList=new ArrayList<>();
+    public List<InvestInfo> jtztList=new ArrayList<>();
+
+    public int typeId;//他等于1时是未答，他等于2时是已答，
+    public int  adminId;//操作员ID
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -82,8 +87,10 @@ public class InvestActivity extends FragmentActivity {
         setContentView(R.layout.activity_invest);
 
         pInfo=(PersonInfo)getIntent().getSerializableExtra("pInfo");
+        adminId=getIntent().getIntExtra("adminId",0);
+        typeId=getIntent().getIntExtra("type",0);
 
-        investInfo=(List<InvestInfo>)getIntent().getSerializableExtra("investInfo");
+        Log.e("2018-1-22","typeId=="+typeId);
 
         rbOne=findViewById(R.id.rb_one);
         rbTwo=findViewById(R.id.rb_two);
@@ -104,13 +111,14 @@ public class InvestActivity extends FragmentActivity {
 
         tvTitle.setText(TextViewUtils.appendSpace(pInfo.getXM()));
 
-        for(InvestInfo info:investInfo){
 
-            if(info.getTYPE_ID()==2){
+
+        for(InvestInfo info:PersonListActivity.investInfo){
+          //  if(info.getTYPE_ID()==5){
 
                 jtztList.add(info);
 
-            }
+   //  }
 
         }
 
@@ -129,28 +137,33 @@ public class InvestActivity extends FragmentActivity {
         fm.beginTransaction().hide(jbzdF).hide(ztzkF).hide(jbxmF).hide(jtztF).show(cxsmF).commit();
     }
 
-    public void onChange(View v){
+    //写着写着换思路了，发现这个方法没用（2018-1-21）
+//    public void onChange(View v){
+//
+//        switch (v.getId()) {
+//
+//            case R.id.rb_one:
+//                fm.beginTransaction().hide(jbzdF).hide(ztzkF).hide(jbxmF).hide(jtztF).show(cxsmF).commit();
+//                break;
+//            case R.id.rb_two:
+//                cxsmF.btnStart.setVisibility(View.GONE);
+//                fm.beginTransaction().hide(jbzdF).hide(ztzkF).hide(jbxmF).hide(cxsmF).show(jtztF).commit();
+//                break;
+//            case R.id.rb_three:
+//                cxsmF.btnStart.setVisibility(View.GONE);
+//                fm.beginTransaction().hide(jbzdF).hide(ztzkF).hide(cxsmF).hide(jtztF).show(jbxmF).commit();
+//                break;
+//            case R.id.rb_four:
+//                cxsmF.btnStart.setVisibility(View.GONE);
+//                fm.beginTransaction().hide(jbzdF).hide(cxsmF).hide(jbxmF).hide(jtztF).show(ztzkF).commit();
+//                break;
+//            case R.id.rb_five:
+//                cxsmF.btnStart.setVisibility(View.GONE);
+//                fm.beginTransaction().hide(cxsmF).hide(ztzkF).hide(jbxmF).hide(jtztF).show(jbzdF).commit();
+//                break;
+//        }
 
-        switch (v.getId()) {
-
-            case R.id.rb_one:
-                fm.beginTransaction().hide(jbzdF).hide(ztzkF).hide(jbxmF).hide(jtztF).show(cxsmF).commit();
-                break;
-            case R.id.rb_two:
-                fm.beginTransaction().hide(jbzdF).hide(ztzkF).hide(jbxmF).hide(cxsmF).show(jtztF).commit();
-                break;
-            case R.id.rb_three:
-                fm.beginTransaction().hide(jbzdF).hide(ztzkF).hide(cxsmF).hide(jtztF).show(jbxmF).commit();
-                break;
-            case R.id.rb_four:
-                fm.beginTransaction().hide(jbzdF).hide(cxsmF).hide(jbxmF).hide(jtztF).show(ztzkF).commit();
-                break;
-            case R.id.rb_five:
-                fm.beginTransaction().hide(cxsmF).hide(ztzkF).hide(jbxmF).hide(jtztF).show(jbzdF).commit();
-                break;
-        }
-
-    }
+ //   }
     @Override
     public void onBackPressed() {
         showAlertDialog();
@@ -179,4 +192,18 @@ public class InvestActivity extends FragmentActivity {
 
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        //  String info = data.getStringExtra("data");
+
+        if (data != null) {
+            String title = data.getStringExtra("Title");
+            Log.e("2018-1-23", "String info = data.getStringExtra====" + title);
+            if (map.get(title) != null) {
+                map.get(title).setText(title + "(完成)");
+            }
+        }
+    }
 }

@@ -4,8 +4,36 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:paddingTop="10dp"
+        android:gravity="center"
+        android:textColor="#000000"
+        android:textSize="18sp"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="诚信声明"/>
+        android:text="诚 信 声 明"/>
 
+
+    <TextView
+        android:textSize="15sp"
+        android:padding="5dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="\t\t\t\t我（们）声明：以下调查中，我（们）所提供的材料均真实有效，表现和回答的关于被调查者的身体状况等，均为平常或近期的一贯情形，无任何虚假申报情况。如不真实，愿意放弃申报资格，并承担由此带来的相应后果。
+\n\t\t\t\t协助调查人声明：我所提供的信息均为我平常所观察和了解的关于被调查者一贯的身体状况，无任何虚假申报的情况。"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <Button
+        android:layout_gravity="bottom|center"
+        android:background="@drawable/btn_wenjuan_selector"
+        android:textColor="#ffffff"
+        android:layout_margin="10dp"
+        android:id="@+id/btn_start_fragment_cxsm"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="开始答题"/>
 </LinearLayout>
