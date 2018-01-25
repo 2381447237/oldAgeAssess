@@ -58,7 +58,7 @@ public class CxsmFragment extends MyBaseFragment{
             @Override
             public void onClick(View view) {
 
-                fm.beginTransaction().hide(((InvestActivity) getActivity()).cxsmF).show(((InvestActivity) getActivity()).jtztF).commit();
+                ((InvestActivity) getActivity()).vp.setCurrentItem(1);
 
                 ((InvestActivity) getActivity()).rbTwo.setChecked(true);
 

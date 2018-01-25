@@ -222,7 +222,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
     protected void loadData() {
 
         //Log.e("2018-1-13","============长度="+info.size());
-
+        questionInfos = getQuestionByParent();
         initViews();
     }
 
@@ -303,12 +303,20 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         btnNext.setVisibility(View.GONE);
 
         llInvest.removeAllViews();
-        questionInfos = getQuestionByParent();
-        for (int i = 0; i < questionInfos.size(); i++) {
-            fretchTree(i, llInvest, questionInfos.get(i), "all");
+//        questionInfos = getQuestionByParent();
+//        for (int i = 0; i < questionInfos.size(); i++) {
+//            fretchTree(i, llInvest, questionInfos.get(i), "all");
+//
+//        }
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < questionInfos.size(); i++) {
+                    fretchTree(i, llInvest, questionInfos.get(i), "all");
 
-        }
-
+                }
+            }
+        });
     }
     @Override
     public void onClick(View view) {

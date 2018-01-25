@@ -134,13 +134,13 @@
             android:layout_height="fill_parent"
             android:background="#cccccc"/>
 
-        <FrameLayout
-           android:layout_marginLeft="5dp"
+        <android.support.v4.view.ViewPager
+            android:layout_marginLeft="10dp"
             android:id="@+id/mainfl"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1">
-        </FrameLayout>
+        </android.support.v4.view.ViewPager>
 
     </LinearLayout>
 

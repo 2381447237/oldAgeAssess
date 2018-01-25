@@ -68,7 +68,7 @@ public class PersonListActivity extends BaseActivity implements View.OnClickList
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            ProgressDialogUtils.dismissMyProgressDialog(mContext);
+         //   ProgressDialogUtils.dismissMyProgressDialog(mContext);
             switch (msg.what){
 
                 case SUCCEED:
