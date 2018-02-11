@@ -21,6 +21,7 @@ import com.youli.oldageassess.entity.AdminInfo;
 import com.youli.oldageassess.entity.InvestInfo;
 import com.youli.oldageassess.utils.MyOkHttpUtils;
 import com.youli.oldageassess.utils.ProgressDialogUtils;
+import com.youli.oldageassess.utils.SharedPreferencesUtils;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -37,41 +38,14 @@ import okhttp3.Response;
 
 public class NeedAssessActivity extends BaseActivity implements View.OnClickListener{
 
-    private final int SUCCEED = 10000;//信息获取成功
-    private final int PROBLEM = 10001;//信息获取失败
-    private final int OVERTIME=10005;//登录超时
+
 
     private ProgressDialog pd;
     private Context mContext=this;
     private ImageView ivWdc,ivYdc;
 
-    private AdminInfo adminInfo;//操作员信息
+    private AdminInfo adminInfo,adminInfo2;//操作员信息
 
-    private Handler mHandler = new Handler() {
-
-        @Override
-        public void handleMessage(Message msg) {
-          dismissMyProgressDialog(mContext);
-            switch (msg.what) {
-
-                case SUCCEED://信息获取成功
-
-                    adminInfo=(AdminInfo)(msg.obj);
-                    ivWdc.setEnabled(true);
-                    ivYdc.setEnabled(true);
-
-                    break;
-
-
-                case PROBLEM://信息获取失败
-                    ivWdc.setEnabled(false);
-                    ivYdc.setEnabled(false);
-
-                    break;
-
-            }
-        }
-    };
 
 
     @Override
@@ -79,6 +53,8 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_need_assess);
 
+        adminInfo=(AdminInfo)getIntent().getSerializableExtra("adminInfo");
+        adminInfo2=(AdminInfo)getIntent().getSerializableExtra("adminInfo2");
         initViews();
     }
 
@@ -88,75 +64,9 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
         ivYdc=findViewById(R.id.iv_ydc_need_assess);
         ivWdc.setOnClickListener(this);
         ivYdc.setOnClickListener(this);
-        ivWdc.setEnabled(false);
-        ivYdc.setEnabled(false);
-
-        getAdminInfo();//获取操作员ID
 
     }
 
-    private void getAdminInfo(){
-
-        showMyProgressDialog(mContext);
-
-        new Thread(
-
-                new Runnable() {
-                    @Override
-                    public void run() {
-
-                        String url= MyOkHttpUtils.BaseUrl+"/Json/Get_Staff.aspx";
-
-                        Response response=MyOkHttpUtils.okHttpGet(url);
-
-                        Message msg=Message.obtain();
-
-                        if(response!=null){
-
-                            if(response.body()!=null){
-
-                                try {
-                                    String resStr=response.body().string();
-
-                                    if(!TextUtils.equals(resStr,"")){
-
-                                        Gson gson=new Gson();
-
-                                        try{
-                                            msg.obj=gson.fromJson(resStr,AdminInfo.class);
-
-                                            msg.what=SUCCEED;
-                                        }catch(Exception e){
-                                            msg.what=OVERTIME;
-
-                                        }
-
-
-
-                                    }
-
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
-                            }else{
-                                msg.what=PROBLEM;
-                            }
-
-                        }else{
-
-                            msg.what=PROBLEM;
-
-                        }
-
-                        mHandler.sendMessage(msg);
-
-                    }
-                }
-
-        ).start();
-
-    }
 
 
     @Override
@@ -170,6 +80,7 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
                  i=new Intent(mContext,PersonListActivity.class);
                  i.putExtra("type",1);
                  i.putExtra("adminInfo",adminInfo);
+                 i.putExtra("adminInfo2",adminInfo2);
                  startActivity(i);
 
                 break;
@@ -179,6 +90,7 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
                 i=new Intent(mContext,PersonListActivity.class);
                 i.putExtra("type",2);
                 i.putExtra("adminInfo",adminInfo);
+                i.putExtra("adminInfo2",adminInfo2);
                 startActivity(i);
                 break;
         }
@@ -207,21 +119,6 @@ public class NeedAssessActivity extends BaseActivity implements View.OnClickList
         builder.show();
     }
 
-    private void showMyProgressDialog(Context context){
 
-        pd=new ProgressDialog(context);
-        pd.setTitle("正在加载中...");
-        pd.setCancelable(false);
-        pd.show();
-    }
-
-    private void dismissMyProgressDialog(Context context){
-
-        if(pd!=null&&pd.isShowing()){
-            pd.dismiss();
-            pd=null;
-        }
-
-    }
 
 }

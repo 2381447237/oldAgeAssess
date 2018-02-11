@@ -13,6 +13,7 @@
         android:layout_height="40dp">
 
         <ImageView
+            android:visibility="gone"
             android:id="@+id/iv_back_person_list"
             android:layout_centerVertical="true"
             android:layout_width="wrap_content"
@@ -29,6 +30,36 @@
             android:text="待 调 查 人 员 名 单"/>
 
         <!--android:text="共有100人"-->
+
+        <!--<ImageView-->
+            <!---->
+            <!--android:id="@+id/iv_num_person_sx"-->
+            <!--android:layout_centerVertical="true"-->
+            <!--android:layout_alignParentRight="true"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:src="@drawable/sx"/>-->
+
+        <!--<TextView-->
+            <!--android:drawableRight="@drawable/sx3"-->
+            <!--android:layout_alignParentLeft="true"-->
+            <!--android:paddingLeft="5dp"-->
+            <!--android:textColor="#ffffff"-->
+            <!--android:id="@+id/tv_sx_person_list"-->
+            <!--android:layout_centerVertical="true"-->
+            <!--android:gravity="center"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"/>-->
+
+        <ImageView
+            android:src="@drawable/sx3"
+            android:layout_alignParentLeft="true"
+            android:paddingLeft="10dp"
+            android:id="@+id/iv_sx_person_list"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:layout_width="35dp"
+            android:layout_height="wrap_content"/>
 
         <TextView
             android:layout_alignParentRight="true"

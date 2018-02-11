@@ -38,16 +38,22 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
 
     private Button btnLogin;//登录按钮
 
-    private EditText etUserName,etPwd,etUserName2;
+    private EditText etUserName,etPwd,etUserName2,etPwd2;
 
-    private String userNameStr,pwdStr,userNameStr2;
+    private String userNameStr,pwdStr,userNameStr2,pwdStr2;
 
     private TextView nameTv,nameTv2;//评估员姓名1，评估员姓名2
 
-    private final int SUCCEED_LOGIN=10000;//登录按钮
-    private final int  PROBLEM=10001;
-    private final int SUCCEED_NAME=10002;//评估员的姓名
-    private final int  PROBLEM_NAME=10003;
+    private final int SUCCEED_LOGIN=10000;//登录1按钮
+    private final int SUCCEED_LOGIN2=10001;//登录2按钮
+    private final int SUCCEED_ADMININFO = 10002;//调查员1信息获取成功
+    private final int SUCCEED_ADMININFO2 = 10003;//调查员2信息获取成功
+    private final int  PROBLEM=10004;
+    private final int SUCCEED_NAME=10005;//评估员的姓名
+    private final int  PROBLEM_NAME=10006;
+    private final int OVERTIME=10007;//登录超时
+
+    private AdminInfo adminInfo,adminInfo2;//操作员信息
 
     private Handler mHandler=new Handler(){
 
@@ -58,15 +64,44 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
 
                 case SUCCEED_LOGIN:
 
+                                       if(TextUtils.equals("true", (String)msg.obj)){
+                                           getAdminInfo("one");//获取操作员ID
+                    }else if(TextUtils.equals("false", (String)msg.obj)){
+                        Toast.makeText(LoginActivity.this,"用户名或密码不正确",Toast.LENGTH_SHORT).show();
+                    }
+
+                    break;
+
+                case SUCCEED_LOGIN2:
+
                     if(TextUtils.equals("true", (String)msg.obj)){
-                        Intent intent=new Intent(LoginActivity.this,NeedAssessActivity.class);
+                        getAdminInfo("two");//获取操作员2ID
+                    }else if(TextUtils.equals("false", (String)msg.obj)){
+                        Toast.makeText(LoginActivity.this,"用户名或密码不正确",Toast.LENGTH_SHORT).show();
+                    }
+
+                    break;
+
+                case SUCCEED_ADMININFO:
+
+                    adminInfo=(AdminInfo)(msg.obj);
+                    //登录
+                    login(etUserName2.getText().toString().trim(),etPwd2.getText().toString().trim(),"two");
+
+                    break;
+
+                case SUCCEED_ADMININFO2:
+                    adminInfo2=(AdminInfo)(msg.obj);
+
+                    Log.e("2018-1-25","adminInfo111=="+adminInfo.getNAME());
+                    Log.e("2018-1-25","adminInfo222=="+adminInfo2.getNAME());
+                                            Intent intent=new Intent(LoginActivity.this,NeedAssessActivity.class);
+                        intent.putExtra("adminInfo",adminInfo);
+                        intent.putExtra("adminInfo2",adminInfo2);
                         startActivity(intent);
                         SharedPreferencesUtils.putString("userName",userNameStr);
                         SharedPreferencesUtils.putString("userName2",userNameStr2);
                         finish();
-                    }else if(TextUtils.equals("false", (String)msg.obj)){
-                        Toast.makeText(LoginActivity.this,"用户名或密码不正确",Toast.LENGTH_SHORT).show();
-                    }
 
                     break;
 
@@ -84,6 +119,11 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
                 case SUCCEED_NAME:
 
                     if(TextUtils.equals(msg.obj+"","False")){
+                        if(msg.arg1==1) {
+                            nameTv.setText(TextViewUtils.appendOneSpace("评估员A"));
+                        }else if(msg.arg1==2){
+                            nameTv2.setText(TextViewUtils.appendOneSpace("评估员B"));
+                        }
                         Toast.makeText(LoginActivity.this,"用户不存在",Toast.LENGTH_SHORT).show();
                     }else {
                         if(msg.arg1==1) {
@@ -125,7 +165,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
           @Override
           public void onFocusChange(View view, boolean b) {
 
-              if(!b){//失去焦点
+              if(!b&&etUserName.getText().toString().trim().length()>0){//失去焦点
                   getLoginName(etUserName,1);
               }
 
@@ -136,14 +176,14 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
             @Override
             public void onFocusChange(View view, boolean b) {
 
-                if(!b){//失去焦点
+                if(!b&&etUserName2.getText().toString().trim().length()>0){//失去焦点
                     getLoginName(etUserName2,2);
                 }
 
             }
         });
         etPwd=findViewById(R.id.et_pwd);
-
+        etPwd2=findViewById(R.id.et_pwd2);
         String localUserName = SharedPreferencesUtils.getString("userName");
         if (!TextUtils.equals("",localUserName)) {
             etUserName.setText(localUserName);
@@ -166,13 +206,20 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
                 userNameStr=etUserName.getText().toString().trim();
                 userNameStr2=etUserName2.getText().toString().trim();
                pwdStr=etPwd.getText().toString().trim();
+                pwdStr2=etPwd2.getText().toString().trim();
 
-                if(TextUtils.equals("",userNameStr)||TextUtils.equals("",pwdStr)){
+                if(TextUtils.equals(userNameStr,userNameStr2)){
+                    Toast.makeText(this,"用户名重复",Toast.LENGTH_SHORT).show();
+
+                    return;
+                }
+
+                if(TextUtils.equals("",userNameStr)||TextUtils.equals("",pwdStr)||TextUtils.equals("",userNameStr2)||TextUtils.equals("",pwdStr2)){
                     Toast.makeText(this,"用户名或密码不能为空",Toast.LENGTH_SHORT).show();
                 }else{
 
                         //登录
-                        login(userNameStr,pwdStr);
+                        login(userNameStr,pwdStr,"one");
 
                 }
 
@@ -182,7 +229,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
 
     }
 
-    private void login(final String name, final String password){
+    private void login(final String name, final String password, final String mark){
 
         ProgressDialogUtils.showMyProgressDialog(this);
 
@@ -191,7 +238,8 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
                 new Runnable() {
                     @Override
                     public void run() {
-                        String url= MyOkHttpUtils.BaseUrl+"/login.aspx?username="+name+"&password="+password;
+
+                          String  url= MyOkHttpUtils.BaseUrl + "/login.aspx?username=" + name + "&password=" + password;
 
                         Log.e("2017/11/9","登录="+url);
 
@@ -211,7 +259,12 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
                         try {
                             if(response!=null) {
                                 msg.obj = response.body().string();
-                                msg.what=SUCCEED_LOGIN;
+                                if(TextUtils.equals(mark,"one")) {
+                                    msg.what=SUCCEED_LOGIN;
+                                }else if(TextUtils.equals(mark,"two")) {
+                                    msg.what=SUCCEED_LOGIN2;
+                                }
+
                                 mHandler.sendMessage(msg);
                             }else{
                                 msg.what=PROBLEM;
@@ -296,5 +349,75 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
         }).start();
 
     }
+
+    private void getAdminInfo(final String mark){
+
+
+        //      showMyProgressDialog(mContext);
+
+        new Thread(
+
+                new Runnable() {
+                    @Override
+                    public void run() {
+
+                        String url= MyOkHttpUtils.BaseUrl+"/Json/Get_Staff.aspx";
+
+                        Response response=MyOkHttpUtils.okHttpGet(url);
+
+                        Message msg=Message.obtain();
+
+                        if(response!=null){
+
+                            if(response.body()!=null){
+
+                                try {
+                                    String resStr=response.body().string();
+
+                                    if(!TextUtils.equals(resStr,"")){
+
+                                        Gson gson=new Gson();
+
+                                        try{
+                                            msg.obj=gson.fromJson(resStr,AdminInfo.class);
+
+
+                                            if(TextUtils.equals("one",mark)) {
+                                                msg.what = SUCCEED_ADMININFO;
+                                            }else  if(TextUtils.equals("two",mark)) {
+                                                msg.what = SUCCEED_ADMININFO2;
+                                            }
+                                        }catch(Exception e){
+                                            msg.what=OVERTIME;
+
+                                        }
+
+
+
+                                    }
+
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }else{
+                                msg.what=PROBLEM;
+                            }
+
+                        }else{
+
+                            msg.what=PROBLEM;
+
+                        }
+
+                        mHandler.sendMessage(msg);
+
+                    }
+                }
+
+        ).start();
+
+    }
+
 
 }

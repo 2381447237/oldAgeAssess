@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <string-array name="resources_jw">
+        <item>居 委</item>
+        <item>有劳动收入</item>
+        <item>移居境外</item>
+        <item>死亡</item>
+        <item>移居市外</item>
+        <item>入学</item>
+        <item>服兵役</item>
+        <item>判刑、劳动教养</item>
+        <item>正在培训</item>
+        <item>积极求职</item>
+
+    </string-array>
+
+</resources>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!--<TextView-->
+        <!--android:drawableRight="@drawable/sx3"-->
+        <!--android:padding="5dp"-->
+        <!--android:paddingLeft="10dp"-->
+        <!--android:layout_width="35dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text=""-->
+        <!--/>-->
+    <ImageView
+        android:src="@drawable/sx3"
+        android:paddingLeft="10dp"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:layout_width="35dp"
+        android:layout_height="wrap_content"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#A9C6C9"
+        />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+
+        <TextView
+           android:id="@+id/shaixuan_layout_start_time_tv"
+            android:padding="5dp"
+            android:layout_margin="10dp"
+            android:gravity="center"
+            android:textSize="17sp"
+            android:background="@drawable/bjk"
+            android:textColor="#52b0f2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="开 始 时 间"/>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+
+
+        <TextView
+            android:id="@+id/shaixuan_layout_end_time_tv"
+            android:padding="5dp"
+            android:layout_margin="10dp"
+            android:gravity="center"
+            android:textSize="17sp"
+            android:background="@drawable/bjk"
+            android:textColor="#52b0f2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="结 束 时 间"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <LinearLayout
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_margin="10dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            >
+
+        <Spinner
+
+            android:background="@drawable/bjk"
+            android:spinnerMode="dialog"
+            android:id="@+id/shaixuan_layout_jd_sp"
+            android:gravity="center"
+            android:textSize="17sp"
+            android:textColor="#52b0f2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <LinearLayout
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_margin="10dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            >
+
+            <Spinner
+                android:background="@drawable/bjk"
+                android:spinnerMode="dialog"
+                android:id="@+id/shaixuan_layout_jw_sp"
+                android:gravity="center"
+                android:textSize="17sp"
+                android:textColor="#52b0f2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:padding="5dp"
+            android:id="@+id/shaixuan_layout_cancel_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="取消"
+            android:textSize="20sp"
+            android:background="#ffffff"
+            android:textColor="#000000"/>
+        <Button
+            android:padding="5dp"
+            android:id="@+id/shaixuan_layout_sure_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="确定"
+            android:textSize="20sp"
+            android:background="#52b0f2"
+            android:textColor="#ffffff"/>
+    </LinearLayout>
+
+</LinearLayout>

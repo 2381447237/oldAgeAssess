@@ -32,10 +32,8 @@ public class MyOkHttpUtils {
     //mdiatype 这个需要和服务端保持一致
     private static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
 
-   // public static final String BaseUrl="http://web.youli.pw:81";
-    public static final String BaseUrl="http://183.194.4.58:81/";
+    public static final String BaseUrl="http://183.194.4.58:81";
     public static OkHttpClient okHttpClient=null;
-
     static String cookies;
 
     //懒汉
@@ -101,7 +99,7 @@ public class MyOkHttpUtils {
 
         RequestBody requestBody=builder.build();
 
-        Request request=new Request.Builder().addHeader("cookies",cookies).url(url).post(requestBody).build();
+        Request request=new Request.Builder().addHeader("cookie",cookies).url(url).post(requestBody).build();
 
         Response response=null;
 
@@ -136,6 +134,8 @@ public class MyOkHttpUtils {
         return  response;
     }
 
+
+
     public static Response okHttpPost(String url, String userName){
 
         getInstance();
@@ -143,7 +143,7 @@ public class MyOkHttpUtils {
         RequestBody requestBody=new FormBody.Builder().add("sfz", userName)
                 .build();
 
-        Request request=new Request.Builder().addHeader("cookies",cookies).url(url).post(requestBody).build();
+        Request request=new Request.Builder().addHeader("cookie",cookies).url(url).post(requestBody).build();
 
         Response response=null;
 
@@ -158,43 +158,24 @@ public class MyOkHttpUtils {
 
     };
 
-    //修改密码http://web.youli.pw:89/Json/Set_Pwd.aspx?pwd=123&new_pwd=321
-    public static Response okHttpPostFormBody(String url, HashMap<String,String> data){
+
+
+    //提交图片
+    public static Response okHttpPostTuPian(String url, String ID){
+        getInstance();
+        RequestBody requestBody=new FormBody.Builder()
+                .add(",Img_No1",ID).build();
+        Request request=new Request.Builder().url(url)
+                .post(requestBody).addHeader("cookie",cookies).build();
+        Response response;
 
         try {
-            //处理参数
-            StringBuilder tempParams = new StringBuilder();
-            int pos = 0;
-            for (String key : data.keySet()) {
-                if (pos > 0) {
-                    tempParams.append("&");
-                }
-                tempParams.append(String.format("%s=%s", key, URLEncoder.encode(data.get(key), "utf-8")));
-                pos++;
-            }
-
-            getInstance();
-            String cookies=SharedPreferencesUtils.getString("cookies");
-
-            //生成参数
-            String params = tempParams.toString();
-            Log.e("--1--","params:"+params);
-
-            //创建一个请求实体对象 RequestBody
-            RequestBody body = RequestBody.create(MEDIA_TYPE_JSON, params);
-
-            Request request=new Request.Builder().url(url).post(body).addHeader("cookie",cookies).build();
-            Log.e("--2--","request:"+request);
-            Response response;
-
             response=okHttpClient.newCall(request).execute();
-            Log.e("--3--","response:"+response);
-            return response;
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return  null;
         }
-
+        return  response;
     }
 
 }

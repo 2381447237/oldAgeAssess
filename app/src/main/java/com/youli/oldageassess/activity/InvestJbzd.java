@@ -1,6 +1,7 @@
 package com.youli.oldageassess.activity;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -86,22 +87,35 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
 
     private List<AnswerInfo> allAnswerList=new ArrayList<>();//所有答案的数据
 
+    public static HashMap<Integer,List<String>> deleteList=new HashMap<>();//用来删题的id
+    public static List<String> list=new ArrayList<>();
+
+    private boolean isLast;//判断是否是最后一题
+
+    private ProgressDialog pd;
+
     private Handler mHandler = new Handler() {
 
         @Override
         public void handleMessage(Message msg) {
 
+            dismissMyProgressDialog();
+
             switch (msg.what) {
 
                 case SUCCEED_LAST://上一题的提交
-
-
+                    isLast=false;
+                    btnLast.setEnabled(true);
+                    index--;
+                    drawLayout(llInvest,threeInfoList.get(index));
+                    Log.e("2018-1-23","上一题的提交成功");
                     break;
                 case SUCCEED_NEXT://下一题的提交
                     btnNext.setEnabled(true);
                     btnLast.setVisibility(View.VISIBLE);
                     Log.e("2018-1-23","下一题的提交成功");
                     if (index == threeInfoList.size() - 1) {
+                        isLast=true;
                         btnNext.setEnabled(false);
                         showLastDialog("last");
                         btnFinsh.setVisibility(View.VISIBLE);
@@ -122,9 +136,13 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
                     break;
                 case PROBLEM://提交失败
 
-                    btnNext.setEnabled(true);
+                   btnNext.setEnabled(true);
+                    btnLast.setEnabled(true);
                     btnFinsh.setEnabled(true);
 
+                    if(TextUtils.equals(msg.obj+"","上一题的提交")){
+                        btnFinsh.setVisibility(View.GONE);
+                    }else
                     if(TextUtils.equals(msg.obj+"","下一题的提交")){
                         btnFinsh.setVisibility(View.GONE);
                     }else if(TextUtils.equals(msg.obj+"","提交大标题")){
@@ -199,6 +217,12 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
 
         }
 
+
+             if(deleteList.get(typeId)!=null) {
+                 Log.e("2018-1-23", "delList=" + deleteList.get(typeId).size());
+             }
+
+
        drawLayout(llInvest,threeInfoList.get(index));
 
     }
@@ -211,8 +235,10 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
         switch (view.getId()){
 
             case R.id.btn_last://上一题
+
                 btnFinsh.setVisibility(View.GONE);
                 btnNext.setEnabled(true);
+
                 if (index == 0) {
                     showLastDialog("first");
                     return;
@@ -228,20 +254,23 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
                                         }
                                     }
                     }
-                index--;
-                drawLayout(llInvest,threeInfoList.get(index));
+                btnLast.setEnabled(false);
+                showMyProgressDialog(this);
+                submitCom("上一题的提交");
+//                index--;
+//                drawLayout(llInvest,threeInfoList.get(index));
                 break;
 
             case R.id.btn_next://下一题
 
                 btnLast.setVisibility(View.VISIBLE);
-//                if (index == threeInfoList.size() - 1) {
-//
-//                    Toast.makeText(mContext, "已经是最后一题了", Toast.LENGTH_SHORT).show();
-//                    btnFinsh.setVisibility(View.VISIBLE);
-//                   return;
-//                }
                 InvestInfo info = threeInfoList.get(index);
+
+                if ( !checkRadioIsChecked(fourInfoList, info.getID())) {//这个if里面是用来判断二级单选是否做完
+                    Toast.makeText(this, "答案不能为空!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 List<AnswerInfo> list = new ArrayList<>();
                 list = getAnswerInfo(info);
                 allAnswerList.addAll(list);
@@ -255,6 +284,7 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
                     e.printStackTrace();
                 }
                 btnNext.setEnabled(false);
+                showMyProgressDialog(this);
                 submitCom("下一题的提交");
 
                 break;
@@ -446,22 +476,29 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
     private void submitAnswer(final String type, final byte[] shujuliu, String sqh) {
 
         final HttpClient client = new DefaultHttpClient();
-
-        final String strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1";
+        String strhttp=null;
+        if(TextUtils.equals(type, "上一题的提交")&&!isLast){//不是最后一题
+            strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1&del=true&Receiv_id="+deleteList.get(typeId).get(list.size()-1);
+        }else if(TextUtils.equals(type, "上一题的提交")&&isLast){//是最后一题
+            strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1&del=true&Receiv_id="+deleteList.get(typeId).get(list.size()-1)+","+deleteList.get(typeId).get(list.size()-2);
+        }else{
+            strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1";
+        }
         Log.e("2018-1-23", "企业提交url" + strhttp);
+        final String finalStrhttp = strhttp;
         new Thread(
 
                 new Runnable() {
                     @Override
                     public void run() {
                         String cookies = SharedPreferencesUtils.getString("cookies");
-                        HttpPost post = new HttpPost(strhttp);
+                        HttpPost post = new HttpPost(finalStrhttp);
 
                         Message msg = Message.obtain();
 
                         try {
                             post.setHeader("cookie", cookies);
-                            if (shujuliu != null) {
+                            if (!TextUtils.equals(type, "上一题的提交")&&shujuliu != null) {
                                 Log.e("2018-1-23", "企业提交shujuliu" + new String(shujuliu));
                                 ByteArrayEntity arrayEntity = new ByteArrayEntity(shujuliu);
                                 arrayEntity.setContentType("application/octet-stream");
@@ -478,15 +515,32 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
 
                                 Log.e("2018-1-23", "企业提交str" + str);
 
-                                if (TextViewUtils.firstIsNumber(str)) {
 
-                                    if (TextUtils.equals(type, "下一题的提交")) {
+                                if (TextViewUtils.firstIsNumber(str)&&TextUtils.equals(type, "下一题的提交")) {
+                                    list.add(str);
+                                    deleteList.put(typeId,list);
+                                    Log.e("2018-1-23", "下一题++++++++++++" + list.size());
                                         msg.obj = str;
                                         msg.what = SUCCEED_NEXT;
-                                    }else if(TextUtils.equals(type,"提交大标题")){
-                                        msg.obj = str;
-                                        msg.what = SUCCEED_ALL;
+                                }else if(TextViewUtils.firstIsNumber(str)&&TextUtils.equals(type,"提交大标题")) {
+                                    list.add(str);
+                                    deleteList.put(typeId,list);
+                                    msg.obj = str;
+                                    msg.what = SUCCEED_ALL;
+
+                                }else if(TextUtils.equals(type, "上一题的提交")&&TextUtils.equals("True",str)){
+                                    if(isLast) {//是最后一题的话，要删除两条
+                                        list.remove(deleteList.get(typeId).get(list.size() - 1));
+                                        list.remove(deleteList.get(typeId).get(list.size() - 1));
+                                    }else{//不是最后一题的话，只要删除一条
+                                        list.remove(deleteList.get(typeId).get(list.size() - 1));
                                     }
+                                    Log.e("2018-1-23", "上一题--------------------" + list.size());
+                                    Log.e("2018-1-23", "上一题的提交str" + str);
+                                    msg.obj = str;
+                                    msg.what = SUCCEED_LAST;
+
+
                                 } else {
 
                                     msg.obj=type;
@@ -511,17 +565,6 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
 
 
     }
-
-//    @Override
-//    public boolean onKeyDown(int keyCode, KeyEvent event) {
-//
-//        if(keyCode==KeyEvent.KEYCODE_BACK){
-//
-//            return false;
-//        }
-//
-//        return super.onKeyDown(keyCode, event);
-//    }
 
     @Override
     public void onBackPressed() {
@@ -574,6 +617,41 @@ public class InvestJbzd extends BaseActivity implements View.OnClickListener{
 
         builder.show();
 
+    }
+
+    private void showMyProgressDialog(Context context){
+
+        pd=new ProgressDialog(context);
+        pd.setTitle("正在加载中...");
+        pd.setCancelable(false);
+        pd.show();
+    }
+
+    private void dismissMyProgressDialog(){
+
+        if(pd!=null&&pd.isShowing()){
+            pd.dismiss();
+            pd=null;
+        }
+
+    }
+
+    private boolean checkRadioIsChecked(List<InvestInfo> infos, int questionId) {
+
+        for (RadioButton radioButton : radioButtons) {
+
+            for (InvestInfo investInfo : infos) {
+
+                if (radioButton.getId() == investInfo.getID() && investInfo.getPARENT_ID() == questionId
+                        && radioButton.isChecked()) {
+
+                    return true;
+
+                }
+            }
+        }
+
+        return false;
     }
 
 }

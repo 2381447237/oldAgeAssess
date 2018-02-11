@@ -1,6 +1,5 @@
 package com.youli.oldageassess.fragment;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -11,11 +10,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -31,16 +28,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.flexbox.FlexboxLayout;
-import com.google.gson.Gson;
 import com.youli.oldageassess.R;
 import com.youli.oldageassess.activity.InvestActivity;
 import com.youli.oldageassess.activity.InvestJbzd;
-import com.youli.oldageassess.entity.AdminInfo;
+import com.youli.oldageassess.activity.PersonListActivity;
 import com.youli.oldageassess.entity.AnswerInfo;
 import com.youli.oldageassess.entity.InvestInfo;
 import com.youli.oldageassess.entity.PersonInfo;
+import com.youli.oldageassess.entity.ResultInfo;
 import com.youli.oldageassess.utils.MyOkHttpUtils;
-import com.youli.oldageassess.utils.ProgressDialogUtils;
 import com.youli.oldageassess.utils.SharedPreferencesUtils;
 import com.youli.oldageassess.utils.TextViewUtils;
 
@@ -49,10 +45,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,10 +54,10 @@ import org.json.JSONObject;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 import okhttp3.Response;
 
@@ -79,15 +72,17 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
     private final int SUCCEED_LAST = 10000;//上一题的提交
     private final int SUCCEED_NEXT = 10001;//下一题的提交
     private final int SUCCEED_ALL = 10002;//最后的提交
-    private final int PROBLEM = 10003;//提交失败
-    private final int OVERTIME=10005;//登录超时
+    private final int SUCCEED_FIVE = 10003;//提交第五部分
+    private final int SUCCEED_RESTART=10004;//重新答题
+    private final int PROBLEM = 10005;//提交失败
+    private final int OVERTIME=10006;//登录超时
     private FragmentManager fm;
 
     private View view;
 
     private ProgressDialog pd;
 
-    private Button btnLast,btnNext,btnAll,btnRestart,btnSubmit,btnLastPage,btnNextPage;
+    private Button btnLast, btnNext, btnAll, btnRestart, btnSubmit;
 
     private LinearLayout llInvest;//所有问卷的信息的布局
 
@@ -105,19 +100,19 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
     private List<InvestInfo> answerThirdInfo = new ArrayList<InvestInfo>();//三级选项的集合
 
-    private List<EditText> questionEditTexts = new ArrayList<EditText>();// 一级的编辑框
+    private List<EditText> questionEditTexts = new ArrayList<EditText>();// 一级的编辑框(答案完成)
 
-    private List<RadioButton> radioButtons = new ArrayList<RadioButton>();//二级单选
+    private List<RadioButton> radioButtons = new ArrayList<RadioButton>();//二级单选(答案完成)
 
-    private List<CheckBox> this_CheckBoxs = new ArrayList<CheckBox>();//二级多选
+    private List<CheckBox> this_CheckBoxs = new ArrayList<CheckBox>();//二级多选(答案完成)
 
-    private List<EditText> editTexts = new ArrayList<EditText>();// 二级的编辑框
+    private List<EditText> editTexts = new ArrayList<EditText>();// 二级的编辑框(答案完成)
 
-    private List<RadioButton> radioThirdButtons = new ArrayList<RadioButton>();//三级单选
+    private List<RadioButton> radioThirdButtons = new ArrayList<RadioButton>();//三级单选(答案完成)
 
-    private List<EditText> editThirdTexts = new ArrayList<EditText>();// 二级的编辑框
+    private List<EditText> editThirdTexts = new ArrayList<EditText>();// 三级的编辑框(答案完成)
 
-    private List<CheckBox> CheckThirdBoxs = new ArrayList<CheckBox>();//三级多选
+    private List<CheckBox> CheckThirdBoxs = new ArrayList<CheckBox>();//三级多选(答案完成)
 
     private List<Button> buttonList=new ArrayList<>();//疾病诊断的按钮
 
@@ -131,35 +126,45 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
     private boolean isZbzd=false;//判断是否是疾病诊断
 
-    private int PageIndex=1;//当前页
+    private List<String> delList=new ArrayList<>();//用来删题的id
 
-    private int PageNum;//总的页数
-
-    private Handler handler=new Handler();
+    private InvestActivity investActivity;
 
     private Handler mHandler = new Handler() {
 
         @Override
         public void handleMessage(Message msg) {
 
+            dismissMyProgressDialog();
+
             switch (msg.what) {
 
                 case SUCCEED_LAST://上一题的提交
 
 
+                    index--;
+                    currentInfo = questionInfos.get(index);
+
+                    checkRb(currentInfo.getTYPE_ID());
+
+                    fretchTree(llInvest, currentInfo, "");
+                    btnLast.setEnabled(true);
+                    Log.e("2018-1-23","上一题的提交成功");
                     break;
                 case SUCCEED_NEXT://下一题的提交
-                    btnNext.setEnabled(true);
+
                     btnLast.setVisibility(View.VISIBLE);
                     index++;
                     currentInfo = questionInfos.get(index);
                     checkRb(currentInfo.getTYPE_ID());
-                    fretchTree(index, llInvest, currentInfo, "");
-                 //   Toast.makeText(getActivity(), "下一题的提交成功", Toast.LENGTH_SHORT).show();
-
-                    Log.e("2018-1-22","下一题的提交成功");
+                    fretchTree(llInvest, currentInfo, "");
+                    btnNext.setEnabled(true);
+                    Log.e("2018-1-23","下一题的提交成功");
                     break;
                 case SUCCEED_ALL://最后的提交
+
+                    Intent intent2=new Intent();
+                    getActivity().setResult(100,intent2);
                     (getActivity()).finish();
 
                     if(getActivity()!=null){
@@ -169,15 +174,36 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 case PROBLEM://提交失败
 
                     btnNext.setEnabled(true);
-//                if(myLevelNum==3) {
-//                    btnLast.setVisibility(View.VISIBLE);
-//                    index++;
-//                    currentInfo = questionInfos.get(index);
-//                    checkRb(currentInfo.getTYPE_ID());
-//                    fretchTree(index, llInvest, currentInfo, "");
-//                }
+                    btnLast.setEnabled(true);
+                    btnRestart.setEnabled(true);
+
                     break;
 
+                case SUCCEED_FIVE://提交第五部分:
+
+                    index--;
+                    currentInfo = questionInfos.get(index);
+
+                    checkRb(currentInfo.getTYPE_ID());
+
+                    fretchTree(llInvest, currentInfo, "");
+                    btnLast.setEnabled(true);
+                    Log.e("2018-1-23","第五部分的提交成功");
+                    break;
+
+                case SUCCEED_RESTART://重新答题
+
+                    investActivity.resultInfo.clear();
+
+                    showFirst();//默认显示第一题
+                    btnLast.setVisibility(View.VISIBLE);
+                    btnNext.setVisibility(View.VISIBLE);
+
+                    btnAll.setVisibility(View.GONE);
+                    btnRestart.setVisibility(View.GONE);
+                    btnSubmit.setVisibility(View.GONE);
+                    btnRestart.setEnabled(true);
+                    break;
             }
         }
     };
@@ -198,9 +224,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         super.onCreate(savedInstanceState);
 
         fm = getFragmentManager();
-
-      //  InvestInfo = (List<InvestInfo>) getArguments().getSerializable("investInfo");
-
         personInfo = (PersonInfo) getArguments().getSerializable("personInfo");
     }
 
@@ -210,18 +233,19 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
         view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_jtzt, container, false);
 
+        investActivity=(InvestActivity) getActivity();
+
         typeId=((InvestActivity) getActivity()).typeId;
 
         InvestInfo=((InvestActivity)getActivity()).jtztList;
         loadData();
+
         return view;
     }
-
 
     @Override
     protected void loadData() {
 
-        //Log.e("2018-1-13","============长度="+info.size());
         questionInfos = getQuestionByParent();
         initViews();
     }
@@ -240,61 +264,91 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         btnSubmit = view.findViewById(R.id.btn_submit);
         btnSubmit.setOnClickListener(this);
 
-        btnLastPage=view.findViewById(R.id.btn_last_page);
-        btnLastPage.setOnClickListener(this);
-        btnNextPage=view.findViewById(R.id.btn_next_page);
-        btnNextPage.setOnClickListener(this);
-        Log.e("2018-1-22","FragmentTypeId=="+typeId);
 
-     //   if(typeId==1) {
-        //   showFirst();//默认显示第一题
-
-        showPageData();//展示部分
+        if(typeId==1) {
+           showFirst();//默认显示第一题
 
 
-//        }else if(typeId==2){
-//
-//            btnRestart.setVisibility(View.VISIBLE);
-//            btnSubmit.setVisibility(View.VISIBLE);
-//
-//            btnAll.setVisibility(View.GONE);
-//            btnLast.setVisibility(View.GONE);
-//            btnNext.setVisibility(View.GONE);
-//
-//            llInvest.removeAllViews();
-//
-//      ;
-//            if (InvestInfo.size() > 0) {
-//
-//                questionInfos = getQuestionByParent();
-//                if (questionInfos.size() > 0) {
-//                    for (int i = 0; i < questionInfos.size(); i++) {
-//                        fretchTree(i, llInvest, questionInfos.get(i), "all");
-//                    }
-//                }
-//            }
-    //    }
+        }else if(typeId==2){
+            btnAll.setVisibility(View.GONE);
+            btnLast.setVisibility(View.GONE);
+            btnNext.setVisibility(View.GONE);
+            llInvest.removeAllViews();
+            if (InvestInfo.size() > 0) {
+                questionInfos = getQuestionByParent();
+                if (questionInfos.size() > 0) {
+                    for (int i = 0; i < questionInfos.size(); i++) {
+                        fretchTree(llInvest, questionInfos.get(i), "all");
+                    }
+                }
+            }
+        }
     }
 
     private void showFirst() {
 
         if (InvestInfo.size() > 0) {
-
             questionInfos = getQuestionByParent();
             if (questionInfos.size() > 0) {
 
-                index = 0;
-                fretchTree(index, llInvest, questionInfos.get(index), "");
-            }
-        }
+                if(investActivity.resultInfo!=null&&investActivity.resultInfo.size()>0) {
 
+                    Map<Integer ,String> P_V = new HashMap<>();
+                    List<Integer> _list = new ArrayList<>();
+                    for(int i=0;i<investActivity.resultInfo.size();i++)//拼接父id，答案
+                    {
+                        ResultInfo _info = investActivity.resultInfo.get(i);
+                        int _detilId=_info.getDETIL_ID();
+                        int _pId =  getParentId(_detilId);
+                        if(P_V.containsKey(_pId))
+                        {
+
+                            P_V.put(_pId,P_V.get(_pId)+_info.getID()+"," ) ;
+                        }
+                        else
+                        {
+                            P_V.put(_pId,_info.getID()+"," ) ;
+                            _list.add(_pId);
+                        }
+                    }
+                    //答案加入删除集合
+                    for(int i=0;i<_list.size();i++) {
+                        delList.add(P_V.get(_list.get(i)));
+                    }
+
+
+
+
+
+
+
+
+                    int detilId=investActivity.resultInfo.get(investActivity.resultInfo.size() - 1).getDETIL_ID();
+
+                   int pId =  getParentId(detilId);//获得最父一级的ID
+
+                    Log.e("2018-2-9","获得最父一级的ID=="+pId);
+
+                    for(int i=0;i<questionInfos.size();i++){
+
+                        if(pId==questionInfos.get(i).getID()){
+
+                            index=i+1;
+                            fretchTree(llInvest, questionInfos.get(index), "");
+                            btnLast.setVisibility(View.VISIBLE);
+                            break;
+                        }
+                    }
+                }else {
+
+                    index = 0;
+                    fretchTree(llInvest, questionInfos.get(index), "");
+                }
+            }
+       }
     }
 
-    //总条数是50
-    //每次显示10条
-    //PageIndex=5
-
-    private void showPageData() {
+    private void showAllData(){
 
         btnRestart.setVisibility(View.VISIBLE);
         btnSubmit.setVisibility(View.VISIBLE);
@@ -303,33 +357,40 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         btnNext.setVisibility(View.GONE);
 
         llInvest.removeAllViews();
-//        questionInfos = getQuestionByParent();
-//        for (int i = 0; i < questionInfos.size(); i++) {
-//            fretchTree(i, llInvest, questionInfos.get(i), "all");
-//
-//        }
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < questionInfos.size(); i++) {
-                    fretchTree(i, llInvest, questionInfos.get(i), "all");
-
-                }
-            }
-        });
+       getActivity().runOnUiThread(new Runnable() {
+           @Override
+           public void run() {
+               for (int i = 0; i < questionInfos.size(); i++) {
+                   fretchTree(llInvest, questionInfos.get(i), "all");
+               }
+           }
+       });
     }
+
     @Override
     public void onClick(View view) {
 
         switch (view.getId()) {
 
             case R.id.btn_last://上一题
-
                 isZbzd=false;
                 btnAll.setVisibility(View.GONE);
 
+                if(InvestJbzd.list.size()>0) {
+
+                    String answerNo = "";
+                    for (String str : InvestJbzd.list) {
+
+                        Log.e("2018-1-23","第五=="+str);
+                        answerNo += str + ",";
+                    }
+
+                    submitFiveAnswer(answerNo, personInfo.getSQH());//删除第5部分的答案
+                    return;
+                }
+
                 if (index == 0) {
-                    showLastDialog("first");
+                    Toast.makeText(getActivity(), "已经是第一题了", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -337,91 +398,79 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     btnLast.setVisibility(View.GONE);
                 }
 
+                if(currentInfo!=null) {
                 // 去掉答题的文本
                 for (EditText editText : questionEditTexts) {
                     if (currentInfo.getID() == editText.getId()) {
                         editText.setText("");
                     }
                 }
-
-                // 去掉小题的文本
-                List<InvestInfo> currentList = getAnswerByParentId(currentInfo);
-                for (InvestInfo wenJuanInfo : currentList) {
-                    for (EditText editText : editTexts) {
-                        if (editText.getId() == wenJuanInfo.getID()) {
-                            editText.setText("");
-                        }
-                    }
-                    for (EditText editText : editThirdTexts) {
-                        if (editText.getId() == wenJuanInfo.getID()) {
-                            editText.setText("");
-                        }
-                    }
-                }
-
-
-                // 去掉单选按钮
-                for (InvestInfo wenJuanInfo : currentList) {
-                    for (RadioButton radioButton : radioButtons) {
-                        if (radioButton.getId() == wenJuanInfo.getID()) {
-                            radioButton.setChecked(false);
-                        }
-                    }
-                    for (RadioButton radioButton : radioThirdButtons) {
-                        if (radioButton.getId() == wenJuanInfo.getID()) {
-                            radioButton.setChecked(false);
-                        }
-                    }
-                    // 去掉多选按钮
-                    for (CheckBox checkBox : this_CheckBoxs) {
-                        if (checkBox.getId() == wenJuanInfo.getID()) {
-                            checkBox.setChecked(false);
-                        }
-                    }
-
-                }
-
-
-                for (InvestInfo info : InvestInfo) {//这个循环里面是去掉第3级里面的输入框和单选按钮
-
+                    // 去掉小题的文本
+                    List<InvestInfo> currentList = getAnswerByParentId(currentInfo);
                     for (InvestInfo wenJuanInfo : currentList) {
-
-                        if (info.getPARENT_ID() == wenJuanInfo.getID()) {
-
-                            for (RadioButton radioButton : radioThirdButtons) {
-                                if (radioButton.getId() == info.getID()) {
-                                    radioButton.setChecked(false);
-                                }
+                        for (EditText editText : editTexts) {
+                            if (editText.getId() == wenJuanInfo.getID()) {
+                                editText.setText("");
                             }
-
-                            for (EditText editText : editThirdTexts) {
-                                if (editText.getId() == info.getID()) {
-                                    editText.setText("");
-                                }
+                        }
+                        for (EditText editText : editThirdTexts) {
+                            if (editText.getId() == wenJuanInfo.getID()) {
+                                editText.setText("");
                             }
-
-                            for (CheckBox checkBox : CheckThirdBoxs) {
-                                if (checkBox.getId() == info.getID()) {
-                                    checkBox.setChecked(false);
+                        }
+                    }
+                    // 去掉单选按钮
+                    for (InvestInfo wenJuanInfo : currentList) {
+                        for (RadioButton radioButton : radioButtons) {
+                            if (radioButton.getId() == wenJuanInfo.getID()) {
+                                radioButton.setChecked(false);
+                            }
+                        }
+                        for (RadioButton radioButton : radioThirdButtons) {
+                            if (radioButton.getId() == wenJuanInfo.getID()) {
+                                radioButton.setChecked(false);
+                            }
+                        }
+                        // 去掉多选按钮
+                        for (CheckBox checkBox : this_CheckBoxs) {
+                            if (checkBox.getId() == wenJuanInfo.getID()) {
+                                checkBox.setChecked(false);
+                            }
+                        }
+                    }
+                    for (InvestInfo info : InvestInfo) {//这个循环里面是去掉第3级里面的输入框和单选按钮
+                        for (InvestInfo wenJuanInfo : currentList) {
+                            if (info.getPARENT_ID() == wenJuanInfo.getID()) {
+                                for (RadioButton radioButton : radioThirdButtons) {
+                                    if (radioButton.getId() == info.getID()) {
+                                        radioButton.setChecked(false);
+                                    }
+                                }
+                                for (EditText editText : editThirdTexts) {
+                                    if (editText.getId() == info.getID()) {
+                                        editText.setText("");
+                                    }
+                                }
+                                for (CheckBox checkBox : CheckThirdBoxs) {
+                                    if (checkBox.getId() == info.getID()) {
+                                        checkBox.setChecked(false);
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                index--;
-                currentInfo = questionInfos.get(index);
-
-                checkRb(currentInfo.getTYPE_ID());
-
-                fretchTree(index, llInvest, currentInfo, "");
+                btnLast.setEnabled(false);
+                showMyProgressDialog(getActivity());
+                submitCom("上一题的提交");
                 break;
 
             case R.id.btn_next://下一题
 
                 if(isZbzd){
 
-                    showLastDialog("last");
+                    Toast.makeText(getActivity(), "已经是最后一题了", Toast.LENGTH_SHORT).show();
                     btnAll.setVisibility(View.VISIBLE);
                     return;
 
@@ -445,8 +494,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     }
 
                 }
-
-
 
                 if (questionEditTexts.size() > 0) {//这个if里面是用来判断一级标题里面的填空是否做完
 
@@ -483,7 +530,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     return;
                 }
 
-                if (myLevelNum == 3 && tempSmallWenJuan.size() > 0 && !checkRadioIsChecked(answerInfo, questionNo) && (TextUtils.equals("单选", questionInutType))) {//这个if里面是用来判断二级单选是否做完
+                if (myLevelNum == 3 && tempSmallWenJuan.size() > 0 && !checkRadioIsChecked(answerInfo, questionNo) && (TextUtils.equals("单选", questionInutType))) {//这个if里面是用来判断三级单选是否做完
                     Toast.makeText(getActivity(), "答案不能为空!", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -492,8 +539,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     Toast.makeText(getActivity(), "答案不能为空!", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-
 
                 if (myLevelNum == 2 && !info.getTITLE_L().contains("居住地址") && singleEdit(myLevelNum, info, answerInfo)) {//这个if里面是用来判断2级纯填空是否做完(这个方法虽然写的很难受，但是能用)
                     return;
@@ -522,7 +567,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     return;
 
                 if (index == questionInfos.size() - 1) {
-                    showLastDialog("last");
+                    Toast.makeText(getActivity(), "已经是最后一题了", Toast.LENGTH_SHORT).show();
                     btnAll.setVisibility(View.VISIBLE);
                     return;
                 }
@@ -530,13 +575,8 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 List<AnswerInfo> list = new ArrayList<>();
 
                 if (!TextUtils.equals("无", info.getINPUT_TYPE())) {
-                    ;
-                    Log.e("2018-1-19", "上上上上上上上上上上上上上上上上上上");
-
                     if(myLevelNum!=3) {
-
                         list = getAnswerInfo(questionNo, info);
-                        Log.e("2018-1-22", "+++++++++++++++++++++++++++++++++++");
                     }else{
 
                         for (InvestInfo bigInfos : InvestInfo) {
@@ -555,45 +595,25 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                             if(TextUtils.equals("独居",infos.getTITLE_L())||TextUtils.equals("不需要",infos.getTITLE_L())){//这里是为了解决18题和19题的
 
                                 if(answerInfoList.get(0).getAnswerId()==infos.getID()){
-
                                     list.clear();
-
                                     list.add(answerInfoList.get(0));
                                 }
-
                             }
-
                         }
-
-
                     }
                 } else {
-
-
                     if (myLevelNum == 2) {
-                        Log.e("2018-1-19", "中中中中中中中中中中中中中中中中中中");
                         for (InvestInfo infos : InvestInfo) {
-
                             if (info.getID() == infos.getPARENT_ID()) {
-
                                 list.addAll(getAnswerInfo(questionNo, infos));
-
                             }
-
                         }
                     } else if (myLevelNum == 3) {
-                        Log.e("2018-1-19", "下下下下下下下下下下下下下下下下下下");
-
                         for (InvestInfo bigInfos : InvestInfo) {
-
                             list.addAll(getAnswerInfoThird(bigInfos, info));
-
-
                         }
-
-                        list=getList(list);//这个是为了除去重复的元素的
-
-                        for(RadioButton rb:radioThirdButtons){//这里还有bug 为了对付第17题
+                       list=getList(list);//这个是为了除去重复的元素的
+                        for(RadioButton rb:radioThirdButtons){//这里为了对付第17题
 
                             for(EditText et:editThirdTexts){
 
@@ -602,36 +622,26 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                                     if(list.size()>1) {
 
                                         if (list.get(0).getAnswerId() == list.get(1).getAnswerId()) {
-
                                             list.remove(0);
-
                                         }
-
-                                        if (list.get(0).getAnswerId() == rb.getId() && !rb.isChecked()) {
+                                        if(TextUtils.equals("",list.get(1).getAnswerText())){
                                             list.remove(0);
                                         }
                                     }
                                 }
-
                             }
-
                         }
-
                     } else if (myLevelNum == 4) {
 
                     }
                 }
-
-
                 String answerString = parseAnswerInfo(list);
-
-                Log.e("2018-1-16", "answerString=" + answerString);
+                Log.e("2018-1-23", "answerString=" + answerString);
                 try {
                     shujuliu = answerString.getBytes("UTF-8");
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-                //2018-1-17==提交答案
 
                 if(index==0){
                     currentInfo=null;
@@ -640,102 +650,54 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 if(currentInfo!=null&&currentInfo.getTYPE_ID()==5){
                     llInvest.removeAllViews();
                     for(int i=0;i<InvestInfo.size();i++){
-
                         if(InvestInfo.get(i).getTYPE_ID()==5&&InvestInfo.get(i).getPARENT_ID()==0){
-
                             isZbzd=true;
-
                             fretchTreeJbzd(i,InvestInfo.get(i),llInvest,"");
                         }
-
                     }
                 return;
                 }
                     btnNext.setEnabled(false);
-                    submitCom("下一题的提交");
-                   // fretchTree(index, llInvest, currentInfo, "");
+                //============2018-2-5================
+//                btnNext.setEnabled(true);
+//                btnLast.setVisibility(View.VISIBLE);
+//                index++;
+//                currentInfo = questionInfos.get(index);
+//                checkRb(currentInfo.getTYPE_ID());
+//                fretchTree(index, llInvest, currentInfo, "");
 
+                //=============2018-2-5=============================
+                showMyProgressDialog(getActivity());
+                    submitCom("下一题的提交");
                 break;
 
             case R.id.btn_all://查看全部
-
-                btnRestart.setVisibility(View.VISIBLE);
-                btnSubmit.setVisibility(View.VISIBLE);
-                btnAll.setVisibility(View.GONE);
-                btnLast.setVisibility(View.GONE);
-                btnNext.setVisibility(View.GONE);
-
-                llInvest.removeAllViews();
-
-                                for (int i = 0; i < questionInfos.size(); i++) {
-                                    fretchTree(i, llInvest, questionInfos.get(i), "all");
-
-                                }
-
+                showAllData();
                 break;
 
             case R.id.btn_restart://重新开始
                 isZbzd=false;
                 showAlertDialog("restart");
-
                 break;
 
             case R.id.btn_submit://提交
                 showAlertDialog("submit");
-                break;
-
-
-            case   R.id.btn_last_page://上一页
-
-                llInvest.removeAllViews();
-                PageIndex--;
-                if (PageIndex>=0) {
-                    for (int i = 10*PageIndex; i < 10*PageIndex+10; i++) {
-                        fretchTree(i, llInvest, questionInfos.get(i), "all");
-
-                    }
-                }else{
-                    Toast.makeText(getActivity(), "当前已经是第一页了!",
-                            Toast.LENGTH_SHORT).show();
-                }
-
-                Toast.makeText(getActivity(), "上一页!",
-                        Toast.LENGTH_SHORT).show();
-
-                break;
-
-            case   R.id.btn_next_page://下一页
-
-                llInvest.removeAllViews();
-                PageIndex++;
-                if (PageIndex <= PageNum) {
-                    for (int i = 10*PageIndex; i < 10*PageIndex+10; i++) {
-                        fretchTree(i, llInvest, questionInfos.get(i), "all");
-
-                    }
-                }
-
-                Toast.makeText(getActivity(), "下一页!",
-                        Toast.LENGTH_SHORT).show();
                 break;
         }
 
     }
 
     //搭建布局
-    private void fretchTree(int index, LinearLayout layout, InvestInfo info, String isAll) {
+    private void fretchTree(LinearLayout layout, InvestInfo info, String isAll) {
 
         if("".equals(isAll)&&info.getTYPE_ID()==5){
             llInvest.removeAllViews();
             for(int i=0;i<InvestInfo.size();i++){
 
                 if(InvestInfo.get(i).getTYPE_ID()==5&&InvestInfo.get(i).getPARENT_ID()==0){
-
                     isZbzd=true;
-
                     fretchTreeJbzd(i,InvestInfo.get(i),llInvest,"");
                 }
-
             }
             return;
         }
@@ -751,9 +713,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         LinearLayout.LayoutParams allparam = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-
         allLl.setLayoutParams(allparam);
-
 
         if (!TextUtils.equals("0", info.getTITLE_TOP()) && !TextUtils.equals(null, info.getTITLE_TOP()) && !TextUtils.equals("", info.getTITLE_TOP())) {
             TextView topTv = new TextView(getActivity());
@@ -802,24 +762,32 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
             qLl.addView(et);
 
+
+
             if (questionEditTexts.size() > 0) {
 
                 List<EditText> tempEditTexts = new ArrayList<>();
                 for (EditText editText2 : questionEditTexts) {
-
                     if (editText2.getId() == info.getID()) {
-
                         et.setText(editText2.getText());
-
                         tempEditTexts.add(editText2);
                     }
-
                 }
                 questionEditTexts.removeAll(tempEditTexts);
                 tempEditTexts.clear();
             }
             questionEditTexts.add(et);
 
+            if(investActivity.resultInfo!=null&&investActivity.resultInfo.size()>0){//这里可能还有问题(主要是顺序的问题)
+
+                for(ResultInfo caInfo:investActivity.resultInfo){
+                    for(EditText myEt:questionEditTexts){
+                        if(caInfo.getDETIL_ID()==myEt.getId()){
+                            myEt.setText(caInfo.getINPUT_VALUE());
+                        }
+                    }
+                }
+            }
 
             TextView tvRight = new TextView(getActivity());//问题右边的部分
             tvRight.setText(info.getTITLE_R());
@@ -830,7 +798,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
         allLl.addView(qLl, allparam);
         //上面的代码是在弄问题的布局
-
 
         //下面的代码是在弄选项的布局
         LinearLayout aLl = new LinearLayout(getActivity());
@@ -847,7 +814,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         answerInfo = getAnswerByParentId(info);//用问题的信息得到选项的信息
 
         if (isThirdList(info) == 2) {//没有第三级数据的
-            Log.e("2018-1-21","2222222222222222222222222");
             if (TextUtils.equals("多选", info.getINPUT_TYPE())) {//多选
                 //多选题
                 List<CheckBox> CheckBoxGroup = new ArrayList<CheckBox>();
@@ -866,32 +832,23 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 }
             }
         } else if (isThirdList(info) == 3) {//有第三级数据的
-            Log.e("2018-1-21","333333333333333333333333333333333");
             for (InvestInfo wenJuanInfo : answerInfo) {
 
                 fretchTreeByQuestionTwo(isThirdList(info), radioGroup, info, wenJuanInfo, optionLl, isAll);
             }
 
         }else if(isThirdList(info) == 4){//有第四级数据的
-
-            Log.e("2018-1-21","444444444444444444444444444");
-
 //            for (InvestInfo wenJuanInfo : answerInfo) {
 //
 //                fretchTreeByQuestionFour(isThirdList(info), radioGroup, info, wenJuanInfo, optionLl, isAll);
 //            }
-
         }
-
         LinearLayout.LayoutParams rgParam = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 80);
-
-
         aLl.addView(radioGroup,allparam);
         aLl.addView(optionLl, allparam);
         allLl.addView(aLl, allparam);
-
         layout.addView(allLl, allparam);
     }
 
@@ -906,7 +863,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         }
         return questionInfos;
     }
-
 
     //用问题的信息得到选项的信息
     private List<InvestInfo> getAnswerByParentId(InvestInfo info) {
@@ -928,7 +884,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 anwserInfos.add(investInfo);
             }
         }
-
         return anwserInfos;
     }
 
@@ -938,61 +893,51 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
         LinearLayout ll = new LinearLayout(getActivity());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                70);
-
+                ViewGroup.LayoutParams.WRAP_CONTENT, 70);
         ll.setLayoutParams(lp);
         ll.setOrientation(LinearLayout.HORIZONTAL);
-
         CheckBox cb = new CheckBox(getActivity());
         cb.setId(wenJuanInfo.getID());
         CurrCol.add(cb);
         cb.setLayoutParams(lp);
         group.addView(cb);
-
         if("all".equals(isAll)){
             cb.setEnabled(false);
         }
+
         if (levelNum == 2) {
         if (this_CheckBoxs.size() > 0) {
             List<CheckBox> tempRadioButtons = new ArrayList<>();
             for (CheckBox checkBox : this_CheckBoxs) {
 
                 if (checkBox.getId() == wenJuanInfo.getID() && checkBox.isChecked()) {
-
                     cb.setChecked(true);
                     tempRadioButtons.add(checkBox);
                 }
             }
             this_CheckBoxs.removeAll(tempRadioButtons);
             tempRadioButtons.clear();
-
         }
 
         for (int i = 0; i < this_CheckBoxs.size(); i++) {
-
             if (this_CheckBoxs.get(i).getId() == cb.getId()) {
                 this_CheckBoxs.remove(i);
                 break;
             }
         }
-
             this_CheckBoxs.add(cb);
         }else if(levelNum==3){
 
             if (CheckThirdBoxs.size() > 0) {
                 List<CheckBox> tempRadioButtons = new ArrayList<>();
                 for (CheckBox checkBox : CheckThirdBoxs) {
-
                     if (checkBox.getId() == wenJuanInfo.getID() && checkBox.isChecked()) {
-
                         cb.setChecked(true);
                         tempRadioButtons.add(checkBox);
                     }
                 }
                 CheckThirdBoxs.removeAll(tempRadioButtons);
                 tempRadioButtons.clear();
-
             }
 
             for (int i = 0; i < CheckThirdBoxs.size(); i++) {
@@ -1002,10 +947,24 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     break;
                 }
             }
-
             CheckThirdBoxs.add(cb);
-
         }
+
+        if(investActivity.resultInfo!=null&&investActivity.resultInfo.size()>0){
+            for(ResultInfo caInfo:investActivity.resultInfo){
+                    for (CheckBox myRb : this_CheckBoxs) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+                            myRb.setChecked(true);
+                        }
+                    }
+                    for (CheckBox myRb : CheckThirdBoxs) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+                            myRb.setChecked(true);
+                        }
+                }
+            }
+        }
+
         //多选题选项的文字和输入框
         TextView tvLeft = new TextView(getActivity());
         tvLeft.setGravity(Gravity.CENTER);
@@ -1034,7 +993,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
             et.setGravity(Gravity.CENTER);
             et.setLayoutParams(etParams);
-
             CurrCol.add(et);
             if (levelNum == 2) {
                 editTexts.add(et);
@@ -1048,11 +1006,8 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                tvRight.setLayoutParams(lp);
                 tvRight.setText(wenJuanInfo.getTITLE_R());
                 ll.addView(tvRight, lp);
-
             }
         }
-
-
         optionLl.addView(ll, lp);
 
     }
@@ -1065,46 +1020,61 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
         LinearLayout ll = new LinearLayout(getActivity());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                85);
+                ViewGroup.LayoutParams.WRAP_CONTENT,85);
         ll.setLayoutParams(lp);
         ll.setOrientation(LinearLayout.HORIZONTAL);
 
         RadioButton rb = new RadioButton(getActivity());
         rb.setLayoutParams(lp);
         rb.setId(wenJuanInfo.getID());
-        CurrCol.add(rb);
-        group.addView(rb);
+        if(!"all".equals(isAll)) {
 
-        if(TextUtils.equals(((InvestActivity)getActivity()).pInfo.getXB(),"1")){//这里是用来填充性别的
-            if(rb.getId()==25){
+            if (TextUtils.equals(((InvestActivity) getActivity()).pInfo.getXB(), "1")) {//这里是用来填充性别的
+                if (rb.getId() == 25) {
+                    rb.setChecked(true);
+                }
+            } else {
+                if (rb.getId() == 26) {
+                    rb.setChecked(true);
+                }
+            }
+
+            if (rb.getId() == 32 && !TextUtils.equals(((InvestActivity) getActivity()).pInfo.getHJD_Name(), "")) {//这里是用来填充是否为本地居民的
                 rb.setChecked(true);
             }
-        }else{
-            if(rb.getId()==26){
+
+            if (rb.getId() == 33 && TextUtils.equals(((InvestActivity) getActivity()).pInfo.getHJD_Name(), "")) {//这里是用来填充是否为本地居民的
+                rb.setChecked(true);
+            }
+
+            if (rb.getId() == 39 && TextUtils.equals(((InvestActivity) getActivity()).pInfo.getSFDB(), "0")) {//这里是用来填充是否为低保的（第9题）
                 rb.setChecked(true);
             }
         }
-
-        if(rb.getId()==32&&!TextUtils.equals(((InvestActivity)getActivity()).pInfo.getHJD_Name(),"")){//这里是用来填充是否为本地居民的
-         rb.setChecked(true);
-        }
-
-        if(rb.getId()==33&&TextUtils.equals(((InvestActivity)getActivity()).pInfo.getHJD_Name(),"")){//这里是用来填充是否为本地居民的
-            rb.setChecked(true);
-        }
-
-        if(rb.getId()==39&&TextUtils.equals(((InvestActivity)getActivity()).pInfo.getSFDB(),"0")){//这里是用来填充是否为低保的（第9题）
-            rb.setChecked(true);
-        }
-
         if("all".equals(isAll)){
             rb.setEnabled(false);
         }
+
+            if (investActivity.resultInfo != null && investActivity.resultInfo.size() > 0) {
+                for (ResultInfo caInfo : investActivity.resultInfo) {
+                    for (RadioButton myRb : radioButtons) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+                            myRb.setChecked(true);
+                        }
+                    }
+                    for (RadioButton myRb : radioThirdButtons) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+                            myRb.setChecked(true);
+                        }
+                    }
+                }
+            }
+
         reDisplayRadioButton(levelNum, rb, wenJuanInfo);
+        CurrCol.add(rb);
+        group.addView(rb);
 
         //单选题选项的文字和输入框
-
         TextView tvLeft = new TextView(getActivity());
         tvLeft.setGravity(Gravity.CENTER);
         tvLeft.setLayoutParams(lp);
@@ -1139,7 +1109,21 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
             if (levelNum == 3) {
                 editThirdTexts.add(et);
             }
-
+            if (investActivity.resultInfo!= null && investActivity.resultInfo.size() > 0) {
+                for (ResultInfo caInfo : investActivity.resultInfo) {
+                    for (EditText myRb : editTexts) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+                            Log.e("2018-2-11","333+++"+caInfo.getINPUT_VALUE());
+                            myRb.setText(caInfo.getINPUT_VALUE());
+                        }
+                    }
+                    for (EditText myRb : editThirdTexts) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+                            Log.e("2018-2-11","444+++"+caInfo.getINPUT_VALUE());
+                            myRb.setText(caInfo.getINPUT_VALUE());}
+                    }
+                }
+            }
             ll.addView(et);
 
             if (!TextUtils.equals("", wenJuanInfo.getTITLE_R())) {
@@ -1152,8 +1136,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
             }
         }
-
-
         optionLl.addView(ll, lp);
     }
 
@@ -1176,19 +1158,18 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         tvLeft.setLayoutParams(lp);
         ll.addView(tvLeft, lp);
 
-
         if (wenJuanInfo.isINPUT()) {
-
             EditText et = new EditText(getActivity());
             et.setId(wenJuanInfo.getID());
             et.setPadding(0, -20, 0, 0);
             if (TextUtils.equals("数字", wenJuanInfo.getINPUT_TYPE())) {
                 et.setInputType(InputType.TYPE_CLASS_NUMBER);
             }
-            reDisplayEditText(levelNum, et, wenJuanInfo);
             if("all".equals(isAll)){
                 et.setEnabled(false);
             }
+            reDisplayEditText(levelNum, et, wenJuanInfo);
+
             LinearLayout.LayoutParams etParams = new LinearLayout.LayoutParams(wenJuanInfo.getWIDTH(), ViewGroup.LayoutParams.WRAP_CONTENT);
             et.setGravity(Gravity.CENTER);
             et.setLayoutParams(etParams);
@@ -1220,23 +1201,42 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 et.setText(((InvestActivity)getActivity()).pInfo.getZZS());
             }
 
+
             CurrCol.add(et);
             if (levelNum == 2) {
                 editTexts.add(et);
             } else if (levelNum == 3) {
                 editThirdTexts.add(et);
             }
+            if (investActivity.resultInfo!= null && investActivity.resultInfo.size() > 0) {
+                for (ResultInfo caInfo : investActivity.resultInfo) {
+                    for (EditText myRb : editTexts) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+
+                            Log.e("2018-2-11","111+++"+caInfo.getINPUT_VALUE());
+
+                            myRb.setText(caInfo.getINPUT_VALUE());
+                        }
+                    }
+                    for (EditText myRb : editThirdTexts) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+
+                            Log.e("2018-2-11","222+++"+caInfo.getINPUT_VALUE());
+                            myRb.setText(caInfo.getINPUT_VALUE());}
+                    }
+                }
+            }
+
+
             ll.addView(et);
 
 
             if (!TextUtils.equals("", wenJuanInfo.getTITLE_R())) {
-
                 TextView tvRight = new TextView(getActivity());
                 tvRight.setGravity(Gravity.CENTER);
                 tvRight.setLayoutParams(lp);
                 tvRight.setText(wenJuanInfo.getTITLE_R());
                 ll.addView(tvRight, lp);
-
             }
         }
 
@@ -1248,7 +1248,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
     private void fretchTreeByQuestionTwo(int levelNum, RadioGroup rGroup, InvestInfo pInfo, InvestInfo wenJuanInfo, LinearLayout optionLl,
                                          String isAll) {
 
-
         LinearLayout ll = new LinearLayout(getActivity());//ll是第二级问题的布局
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -1256,8 +1255,7 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         ll.setLayoutParams(lp);
         ll.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams rglp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                70);
+                ViewGroup.LayoutParams.WRAP_CONTENT, 70);
         if (TextUtils.equals(pInfo.getINPUT_TYPE(), "单选")) {
 
             RadioButton rb = new RadioButton(getActivity());
@@ -1271,9 +1269,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 rb.setEnabled(false);
             }
         }
-
-
-
 
         TextView tvLeft = new TextView(getActivity());
         if(wenJuanInfo.getCODE()!=null) {
@@ -1296,6 +1291,9 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
             if("all".equals(isAll)){
                 et.setEnabled(false);
             }
+
+
+
             reDisplayEditText(levelNum, et, wenJuanInfo);
 
             LinearLayout.LayoutParams etParams = new LinearLayout.LayoutParams(wenJuanInfo.getWIDTH(), ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -1306,19 +1304,34 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
             if (levelNum == 3) {
                 editThirdTexts.add(et);
             }
+
+            if (investActivity.resultInfo!= null && investActivity.resultInfo.size() > 0) {
+                for (ResultInfo caInfo : investActivity.resultInfo) {
+                    for (EditText myRb : editTexts) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+
+                            Log.e("2018-2-11","555+++"+caInfo.getINPUT_VALUE());
+
+                            myRb.setText(caInfo.getINPUT_VALUE());
+                        }
+                    }
+                    for (EditText myRb : editThirdTexts) {
+                        if (caInfo.getDETIL_ID() == myRb.getId()) {
+
+                            Log.e("2018-2-11","666+++"+caInfo.getINPUT_VALUE());
+                            myRb.setText(caInfo.getINPUT_VALUE());}
+                    }
+                }
+            }
             ll.addView(et);
-
             if (!TextUtils.equals("", wenJuanInfo.getTITLE_R())) {
-
                 TextView tvRight = new TextView(getActivity());
                 tvRight.setGravity(Gravity.CENTER);
                 tvRight.setLayoutParams(lp);
                 tvRight.setText(wenJuanInfo.getTITLE_R());
                 ll.addView(tvRight, lp);
-
             }
         }
-
         optionLl.addView(ll, lp);
         //上面的代码是在弄二级问题的布局
 
@@ -1329,8 +1342,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
         RadioGroup radioGroup = new RadioGroup(getActivity());
         radioGroup.setLayoutParams(lp);
-
-
         LinearLayout oLl = new LinearLayout(getActivity());
         oLl.setLayoutParams(lp);
         oLl.setOrientation(LinearLayout.VERTICAL);
@@ -1340,23 +1351,18 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         if (TextUtils.equals("单选", wenJuanInfo.getINPUT_TYPE())) {//单选(还没完成)
 
             for (InvestInfo info : answerThirdInfo) {
-
-
-                fretchTreeByQuestion(levelNum, radioGroup, info,
-                        oLl, isAll);
+                fretchTreeByQuestion(levelNum, radioGroup, info,oLl, isAll);
             }
 
         } else if (TextUtils.equals("数字", wenJuanInfo.getINPUT_TYPE()) || TextUtils.equals("无", wenJuanInfo.getINPUT_TYPE())) {
             for (InvestInfo info : answerThirdInfo) {
-                fretchTreeByQuestionShuzi(levelNum, info,
-                        oLl, isAll);
+                fretchTreeByQuestionShuzi(levelNum, info,oLl, isAll);
             }
         } else if (TextUtils.equals("多选", wenJuanInfo.getINPUT_TYPE())) {
             List<CheckBox> CheckBoxGroup = new ArrayList<CheckBox>();
 
             for (InvestInfo info : answerThirdInfo) {
-                fretchTreeByQuestionMultiSelect(levelNum, CheckBoxGroup, radioGroup,
-                        info, oLl, isAll);
+                fretchTreeByQuestionMultiSelect(levelNum, CheckBoxGroup, radioGroup,info, oLl, isAll);
             }
         }
 
@@ -1365,14 +1371,10 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         aLl.setPadding(30, 0, 0, 0);//第三级的数据往右移动30xp
         optionLl.addView(aLl, lp);
 
-
     }
 
     //第二级
-    private void fretchTreeByQuestionFour(int levelNum, RadioGroup rGroup, InvestInfo pInfo, InvestInfo wenJuanInfo, LinearLayout optionLl,
-                                         String isAll) {
-
-        Log.e("2018-1-21","啦啦啦啦啦");
+    private void fretchTreeByQuestionFour(int levelNum, RadioGroup rGroup, InvestInfo pInfo, InvestInfo wenJuanInfo, LinearLayout optionLl,String isAll) {
 
         LinearLayout ll = new LinearLayout(getActivity());//ll是第二级问题的布局
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -1397,9 +1399,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
             }
         }
 
-
-
-
         TextView tvLeft = new TextView(getActivity());
         if(wenJuanInfo.getCODE()!=null) {
             tvLeft.setText(wenJuanInfo.getCODE()+wenJuanInfo.getTITLE_L());
@@ -1411,7 +1410,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         ll.addView(tvLeft, rglp);
 
         if (wenJuanInfo.isINPUT()) {
-
             EditText et = new EditText(getActivity());
             et.setId(wenJuanInfo.getID());
             et.setPadding(0, -20, 0, 0);
@@ -1422,25 +1420,20 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 et.setEnabled(false);
             }
             reDisplayEditText(levelNum, et, wenJuanInfo);
-
             LinearLayout.LayoutParams etParams = new LinearLayout.LayoutParams(wenJuanInfo.getWIDTH(), ViewGroup.LayoutParams.WRAP_CONTENT);
             et.setGravity(Gravity.CENTER);
             et.setLayoutParams(etParams);
-
             CurrCol.add(et);
             if (levelNum == 3) {
                 editThirdTexts.add(et);
             }
             ll.addView(et);
-
             if (!TextUtils.equals("", wenJuanInfo.getTITLE_R())) {
-
                 TextView tvRight = new TextView(getActivity());
                 tvRight.setGravity(Gravity.CENTER);
                 tvRight.setLayoutParams(lp);
                 tvRight.setText(wenJuanInfo.getTITLE_R());
                 ll.addView(tvRight, lp);
-
             }
         }
 
@@ -1454,31 +1447,23 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
         RadioGroup radioGroup = new RadioGroup(getActivity());
         radioGroup.setLayoutParams(lp);
-
-
         LinearLayout oLl = new LinearLayout(getActivity());
         oLl.setLayoutParams(lp);
         oLl.setOrientation(LinearLayout.VERTICAL);
-
         answerThirdInfo = getThirdBySecondId(wenJuanInfo);//得到第三级选项的信息
 
         if (TextUtils.equals("单选", wenJuanInfo.getINPUT_TYPE())) {//单选(还没完成)
 
             for (InvestInfo info : answerThirdInfo) {
 
-
-                fretchTreeByQuestion(levelNum, radioGroup, info,
-                        oLl, isAll);
+                fretchTreeByQuestion(levelNum, radioGroup, info,oLl, isAll);
             }
-
         }
 
         aLl.addView(radioGroup, lp);
         aLl.addView(oLl, lp);
         aLl.setPadding(30, 0, 0, 0);//第三级的数据往右移动30xp
         optionLl.addView(aLl, lp);
-
-
     }
 
     private void showAlertDialog(final String mark) {
@@ -1486,6 +1471,21 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         String title = null;
 
         if (TextUtils.equals(mark, "restart")) {
+
+             questionEditTexts.clear();// 一级的编辑框
+
+            radioButtons.clear();//二级单选
+
+            this_CheckBoxs.clear();//二级多选
+
+            editTexts.clear();// 二级的编辑框
+
+           radioThirdButtons.clear();//三级单选
+
+            editThirdTexts.clear();// 二级的编辑框
+
+            CheckThirdBoxs.clear();//三级多选
+
             title = "您确定要重新答题吗？";
         }else  if (TextUtils.equals(mark, "submit")) {
             title = "您确定要提交吗？";
@@ -1500,18 +1500,10 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
                 if (TextUtils.equals(mark, "restart")) {
 
-                    showFirst();//默认显示第一题
-                    btnLast.setVisibility(View.VISIBLE);
-                    btnNext.setVisibility(View.VISIBLE);
-
-                    btnAll.setVisibility(View.GONE);
-                    btnRestart.setVisibility(View.GONE);
-                    btnSubmit.setVisibility(View.GONE);
-
+                    btnRestart.setEnabled(false);
+                    restart(personInfo.getSQH());
                 }else {
-
                     submitAll();//最后的提交
-
                 }
             }
         });
@@ -1523,7 +1515,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         });
         builder.show();
     }
-
 
     //获取单条数据
     private List<AnswerInfo> getAnswerInfo(int id, InvestInfo answer) {
@@ -1563,7 +1554,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                         answerInfo.setAnswerText("");
                         list.add(answerInfo);
                     }
-
                 } else if (col instanceof EditText) {
 
                     EditText editText = (EditText) col;
@@ -1580,37 +1570,26 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                         answerInfo = new AnswerInfo();
                         answerInfo.setAnswerId(answer.getID());
                         answerInfo.setAnswerNo(answer.getID());//2018-01-16这里可能出错
-
-
                     }
 
                     // 如果是父标题的文本，加入集合
                     if (answer.getPARENT_ID() == 0) {
-
                         answerInfo.setAnswerText(editText.getText().toString().trim());
                         list.add(answerInfo);
-
                         continue;
 
                     }
-
                     for (int i = 0; i < rb_selects.size(); i++) {
-
-
                         if (rb_selects.get(i) == editText.getId()) {
-
-                            answerInfo.setAnswerText(editText.getText()
-                                    .toString().trim());
+                            answerInfo.setAnswerText(editText.getText().toString().trim());
                             continue;
                         }
-
                     }
                     for (int i = 0; i < check_selects.size(); i++) {
 
                         if (check_selects.get(i) == editText.getId()) {
 
-                            answerInfo.setAnswerText(editText.getText()
-                                    .toString().trim());
+                            answerInfo.setAnswerText(editText.getText().toString().trim());
                             continue;
                         }
                     }
@@ -1659,7 +1638,6 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 list.remove(1);
             }
         }
-
         return list;
     }
 
@@ -1678,13 +1656,11 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     RadioButton rb = (RadioButton) col;
 
                     if (bigInfo.getPARENT_ID() == twoInfo.getID() && rb.isChecked()) {
-
                                 answerInfo = new AnswerInfo();
                                 answerInfo.setAnswerId(rb.getId());
                                 answerInfo.setAnswerNo(rb.getId());
                                 answerInfo.setAnswerText("");
                                 list.add(answerInfo);
-
                     }
 
                 }else if(col instanceof EditText) {
@@ -1700,15 +1676,12 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                             answerInfo.setAnswerText(et.getText().toString().trim());
                             list.add(answerInfo);
                         }
-
                     }
                 }else if(col instanceof  CheckBox) {
 
                         CheckBox cb = (CheckBox) col;
 
                             if (bigInfo.getPARENT_ID() == twoInfo.getID() && cb.isChecked()) {
-
-
                                 answerInfo = new AnswerInfo();
                                 answerInfo.setAnswerId(cb.getId());
                                 answerInfo.setAnswerNo(cb.getId());
@@ -1738,16 +1711,12 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                 array.put(object);
             }
         }
-
         return array.toString();
-
     }
 
     //提交答案
     private void submitCom(String type) {
-
         submitAnswer(type, shujuliu, personInfo.getSQH());
-
     }
 
     //判断每题最多有第几级数据
@@ -1777,13 +1746,9 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
                     myLevelNum = 4;
                     return myLevelNum;
                 }
-
             }
         }
-
-
         return myLevelNum;
-
     }
 
 
@@ -1792,12 +1757,8 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         for (RadioButton radioButton : radioButtons) {
 
             for (InvestInfo investInfo : infos) {
-
-                if (radioButton.getId() == investInfo.getID() && investInfo.getPARENT_ID() == questionId
-                        && radioButton.isChecked()) {
-
+                if (radioButton.getId() == investInfo.getID() && investInfo.getPARENT_ID() == questionId&& radioButton.isChecked()) {
                     return true;
-
                 }
             }
         }
@@ -1805,12 +1766,8 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
         for (CheckBox cb : this_CheckBoxs) {
 
             for (InvestInfo investInfo : infos) {
-
-                if (cb.getId() == investInfo.getID() && investInfo.getPARENT_ID() == questionId
-                        && cb.isChecked()) {
-
+                if (cb.getId() == investInfo.getID() && investInfo.getPARENT_ID() == questionId && cb.isChecked()) {
                     return true;
-
                 }
             }
         }
@@ -1819,37 +1776,26 @@ public class JtztFragment extends MyBaseFragment implements View.OnClickListener
 
             for (InvestInfo investInfo : infos) {
 
-                if (radioButton.getId() == investInfo.getID() && investInfo.getPARENT_ID() == questionId
-                        && radioButton.isChecked()) {
-
+                if (radioButton.getId() == investInfo.getID() && investInfo.getPARENT_ID() == questionId && radioButton.isChecked()) {
                     return true;
-
                 }
             }
         }
-
         return false;
     }
 
 
     private boolean checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object> CurrCol) {
 
-Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object> CurrCol)");
-      //  for (InvestInfo info : infos) {
-
             for (RadioButton radioButton : radioThirdButtons) {
 
                 for (InvestInfo investInfo : infos) {
 
                     if (radioButton.getId() == investInfo.getID() && radioButton.isChecked()) {
-
                         return true;
-
                     }
                 }
             }
-
-     //   }
         return false;
     }
 
@@ -1872,7 +1818,6 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
                                 Toast.makeText(getActivity(), "答案不能为空!",
                                         Toast.LENGTH_SHORT).show();
                                 return true;
-
                             }
                         }
                     }
@@ -1899,9 +1844,7 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
 
                             if (radioButton.getId() == wenJuanInfo.getID()
                                     && editText.getId() == wenJuanInfo.getID() && "".equals(editText.getText().toString().trim())) {
-
-                                Toast.makeText(getActivity(), "答案不能为空!",
-                                        Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), "答案不能为空!",Toast.LENGTH_SHORT).show();
                                 return true;
 
                             }
@@ -1914,8 +1857,6 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
     }
 
     private boolean singleEdit(int levelNum, InvestInfo infos, List<InvestInfo> aInfos) {
-
-        //   if (levelNum == 2) {
         if (editTexts.size() > 0 && CurrCol.size() > 0) {
             for (Object col : CurrCol) {
                 if (col instanceof EditText) {
@@ -1924,8 +1865,7 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
                             if (aInfoList.getID() == et.getId()) {
                                 if (!TextUtils.equals("单选", infos.getINPUT_TYPE()) && !TextUtils.equals("多选", infos.getINPUT_TYPE()) && !infos.isINPUT()) {
                                     if ("".equals(et.getText().toString().trim())) {
-                                        Toast.makeText(getActivity(), "答案不能为空!",
-                                                Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getActivity(), "答案不能为空!", Toast.LENGTH_SHORT).show();
                                         return true;
                                     }
                                 }
@@ -1935,13 +1875,11 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
                 }
             }
         }
-        //    }
         return false;
     }
 
     private boolean singleThirdEdit(int levelNum, InvestInfo infos, List<InvestInfo> aInfos) {
 
-        //   if (levelNum == 2) {
         if (editThirdTexts.size() > 0 && CurrCol.size() > 0) {
             for (Object col : CurrCol) {
                 if (col instanceof EditText) {
@@ -1950,8 +1888,7 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
                             if (aInfoList.getID() == et.getId()) {
                                 if (!TextUtils.equals("单选", infos.getINPUT_TYPE()) && !TextUtils.equals("多选", infos.getINPUT_TYPE()) && !infos.isINPUT()) {
                                     if ("".equals(et.getText().toString().trim())) {
-                                        Toast.makeText(getActivity(), "答案不能为空!",
-                                                Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getActivity(), "答案不能为空!",Toast.LENGTH_SHORT).show();
                                         return true;
                                     }
                                 }
@@ -1961,7 +1898,6 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
                 }
             }
         }
-        //    }
         return false;
     }
 
@@ -1974,92 +1910,92 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
                     for (EditText editText : editTexts) {
                         for (InvestInfo wenJuanInfo : infos) {
                             if (radioButton.getId() == wenJuanInfo.getID() && editText.getId() == wenJuanInfo.getID() && "".equals(editText.getText().toString().trim())) {
-                                Toast.makeText(getActivity(), "答案不能为空!",
-                                        Toast.LENGTH_SHORT).show();
-
+                                Toast.makeText(getActivity(), "答案不能为空!", Toast.LENGTH_SHORT).show();
                                 return true;
                             }
-
                         }
                     }
                 }
-
             }
         }
         return false;
-
     }
 
     private void submitAnswer(final String type, final byte[] shujuliu, String sqh) {
 
         final HttpClient client = new DefaultHttpClient();
-
-        final String strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1";
-        Log.e("2018-1-16", "企业提交url" + strhttp);
+        String strhttp = null;
+        if(TextUtils.equals(type, "下一题的提交")){
+            strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1";
+        }else if(TextUtils.equals(type, "上一题的提交")){
+          //  if(investActivity.resultInfo==null) {
+                strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1&del=true&Receiv_id=" + delList.get(delList.size() - 1);
+           // }
+        }
+        Log.e("2018-1-23", "企业提交url" + strhttp);
+        final String finalStrhttp = strhttp;
         new Thread(
-
                 new Runnable() {
                     @Override
                     public void run() {
                         String cookies = SharedPreferencesUtils.getString("cookies");
-                        HttpPost post = new HttpPost(strhttp);
-
+                        HttpPost post = new HttpPost(finalStrhttp);
                         Message msg = Message.obtain();
-
                         try {
                             post.setHeader("cookie", cookies);
-                            if (shujuliu != null) {
-                                Log.e("2018-1-16", "企业提交shujuliu" + new String(shujuliu));
+                            if (TextUtils.equals(type, "下一题的提交")&&shujuliu != null) {
+                                Log.e("2018-1-23", "企业提交shujuliu" + new String(shujuliu));
                                 ByteArrayEntity arrayEntity = new ByteArrayEntity(shujuliu);
                                 arrayEntity.setContentType("application/octet-stream");
                                 post.setEntity(arrayEntity);
                             }
 
                             HttpResponse response = client.execute(post);
-                            Log.e("2018-1-16", "企业提交响应码" + response.getStatusLine().getStatusCode());
-                            if (response.getStatusLine().getStatusCode() == 200) {
-
+                            Log.e("2018-1-23", "企业提交响应码" + response.getStatusLine().getStatusCode());
                                 HttpEntity entity = response.getEntity();
                                 //EntityUtils中的toString()方法转换服务器的响应数据
                                 final String str = EntityUtils.toString(entity, "utf-8");
-
-                                Log.e("2018-1-16", "企业提交str" + str);
-
-                                if (TextViewUtils.firstIsNumber(str)) {
-
-                                    if (TextUtils.equals(type, "下一题的提交")) {
+                                if (TextViewUtils.firstIsNumber(str)&&TextUtils.equals(type, "下一题的提交")) {
+                                        delList.add(str);
+                                        Log.e("2018-1-23", "下一题的提交str" + str);
                                         msg.obj = str;
                                         msg.what = SUCCEED_NEXT;
-                                    }
-                                } else {
+                                }else if(TextUtils.equals(type, "上一题的提交")&&TextUtils.equals("True",str)){
 
+//                                    if(investActivity.resultInfo!=null&&investActivity.resultInfo.size()>0) {
+//                                        List<ResultInfo> rList = new ArrayList<>();
+//                                        rList.clear();
+//                                        rList.addAll(investActivity.resultInfo);
+//                                        for (ResultInfo rInfo : rList) {
+//                                            if (delList.get(delList.size() - 1).contains(rInfo.getDETIL_ID() + "")) {
+//                                                investActivity.resultInfo.remove(rInfo);
+//                                            }
+//                                        }
+//                                    }
+
+                                    delList.remove(delList.size()-1);
+
+                                        Log.e("2018-1-23", "上一题的提交str" + str);
+                                        msg.obj = str;
+                                        msg.what = SUCCEED_LAST;
+                                    }else{
                                     msg.what = PROBLEM;
                                 }
-
-                            }
                         } catch (Exception e) {
                             msg.what = PROBLEM;
                             e.printStackTrace();
                         } finally {
                             post.abort();
-
                             mHandler.sendMessage(msg);
                         }
-
                     }
                 }
-
         ).start();
-
-
     }
 
     //重新显示输入框里面的内容
     private void reDisplayEditText(int levelNum, EditText et, InvestInfo wenJuanInfo) {
-
-
         if (levelNum == 2) {
-
             if (editTexts.size() > 0) {
                 List<EditText> tempEditTexts = new ArrayList<>();
                 for (EditText editText2 : editTexts) {
@@ -2071,7 +2007,6 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
                 editTexts.removeAll(tempEditTexts);
                 tempEditTexts.clear();
             }
-
         } else if (levelNum == 3) {
             if (editThirdTexts.size() > 0) {
                 List<EditText> tempEditTexts = new ArrayList<>();
@@ -2084,15 +2019,11 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
                 editThirdTexts.removeAll(tempEditTexts);
                 tempEditTexts.clear();
             }
-
         }
-
-
     }
 
     //重新显示输入RadioButton的内容
     private void reDisplayRadioButton(int levelNum, RadioButton rb, InvestInfo wenJuanInfo) {
-
 
         if (levelNum == 2) {
             if (radioButtons.size() > 0) {
@@ -2121,8 +2052,6 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
             }
             radioThirdButtons.add(rb);
         }
-
-
     }
 
     private  ArrayList getList(List arr) {//集合去重
@@ -2132,11 +2061,8 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
         Iterator it = arr.iterator();
 
         while (it.hasNext()) {
-
             Object obj = (Object) it.next();
-
             if(!list.contains(obj)){                //不包含就添加
-
                 list.add(obj);
             }
         }
@@ -2146,31 +2072,18 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
     private void checkRb(int i){
 
         switch (i){
-
             case 2:
-
                 ((InvestActivity)getActivity()).rbTwo.setChecked(true);
-
                 break;
-
             case 3:
-
                 ((InvestActivity)getActivity()).rbThree.setChecked(true);
-
                 break;
-
             case 4:
-
                 ((InvestActivity)getActivity()).rbFour.setChecked(true);
-
                 break;
-
             case 5:
-
                 ((InvestActivity)getActivity()).rbFive.setChecked(true);
-
                 break;
-
         }
 
     };
@@ -2188,12 +2101,12 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
 
         btn.setText(info.getTITLE_L());
         btn.setId(info.getID());
+
         buttonList.add(btn);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent i=new Intent((getActivity()),InvestJbzd.class);
-             //   i.putExtra("info",(Serializable) InvestInfo);
                 i.putExtra("id",info.getID());
                 i.putExtra("title",btn.getText().toString());
                 i.putExtra("personInfo",personInfo);
@@ -2203,119 +2116,161 @@ Log.e("2018-1-22","checkThirdRadioIsChecked(List<InvestInfo> infos, List<Object>
         ll.addView(btn);
     };
 
-    //获取单条数据
-    private List<AnswerInfo> getButtonAnswerInfo(Button btn) {
-
-        List<AnswerInfo> list = new ArrayList<AnswerInfo>();
-
-        AnswerInfo answerInfo = null;
-
-
-                        answerInfo = new AnswerInfo();
-                        answerInfo.setAnswerId(btn.getId());
-                        answerInfo.setAnswerNo(btn.getId());//2018-01-17这里可能出错
-                        answerInfo.setAnswerText("");
-                        list.add(answerInfo);
-
-
-
-
-        return list;
-    }
-
     private void submitAll(){
-
         new Thread(
-
                 new Runnable() {
                     @Override
                     public void run() {
-
                         //http://web.youli.pw:81/Json/Get_Staff.aspx
-
-                        String  url = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + personInfo.getSQH() + "&RECEIVED_STAFF1="+((InvestActivity)getActivity()).adminInfo.getID()+ "&RECEIVED_STAFF2="+((InvestActivity)getActivity()).adminInfo.getID();
+                        String  url = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + personInfo.getSQH() + "&RECEIVED_STAFF1="+((InvestActivity)getActivity()).adminInfo.getID()+ "&RECEIVED_STAFF2="+((InvestActivity)getActivity()).adminInfo2.getID();
 
                         Log.e("2018-1-23","最后的url=="+url);
                         Response response=MyOkHttpUtils.okHttpGet(url);
-
                         Message msg=Message.obtain();
-
                         if(response!=null){
-
                             try {
                                 String str=response.body().string();
-
                                 Log.e("2018-1-23","最后的提交=="+str);
-
                                 if(!TextUtils.equals(str,"")){
-
                                     msg.what=SUCCEED_ALL;
-
                                 }
-
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 msg.what=OVERTIME;
-
                             }
-
                         }else{
-
                             msg.what=PROBLEM;
-
                         }
-
                         mHandler.sendMessage(msg);
-
                     }
                 }
-
-
         ).start();
-
-
-    }
-
-    private void showLastDialog(String mark){
-
-        String contentStr = null;
-
-        if(TextUtils.equals(mark,"last")){
-            contentStr="当前已经是最后一题了！";
-        } else if (TextUtils.equals(mark, "first")) {
-            contentStr="当前已经是第一题了！";
-        }
-
-        final AlertDialog.Builder builder=new AlertDialog.Builder(getActivity());
-        builder.setCancelable(false);
-        builder.setTitle("温馨提示");
-        builder.setMessage(contentStr);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-            }
-        });
-
-        builder.show();
-
     }
 
     private void showMyProgressDialog(Context context){
-
         pd=new ProgressDialog(context);
         pd.setTitle("正在加载中...");
         pd.setCancelable(false);
         pd.show();
     }
 
-    private void dismissMyProgressDialog(Context context){
-
+    private void dismissMyProgressDialog(){
         if(pd!=null&&pd.isShowing()){
             pd.dismiss();
             pd=null;
         }
+    }
 
+    private void submitFiveAnswer(String answerNo,String sqh){
+
+        showMyProgressDialog(getActivity());
+
+        final HttpClient client = new DefaultHttpClient();
+        String strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1&del=true&Receiv_id="+answerNo+delList.get(delList.size()-1);
+        Log.e("2018-1-23", "企业提交url" + strhttp);
+        final String finalStrhttp = strhttp;
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        String cookies = SharedPreferencesUtils.getString("cookies");
+                        HttpPost post = new HttpPost(finalStrhttp);
+                        Message msg = Message.obtain();
+                        try {
+                            post.setHeader("cookie", cookies);
+                            HttpResponse response = client.execute(post);
+                            Log.e("2018-1-23", "企业提交响应码" + response.getStatusLine().getStatusCode());
+                            HttpEntity entity = response.getEntity();
+                            //EntityUtils中的toString()方法转换服务器的响应数据
+                            final String str = EntityUtils.toString(entity, "utf-8");
+                            if(TextUtils.equals("True",str)){
+                                InvestJbzd.list.clear();
+                                delList.remove(delList.size()-1);
+                                Log.e("2018-1-23", "上一题的提交str" + str);
+                                msg.what = SUCCEED_FIVE;
+                            }
+                        } catch (Exception e) {
+                            msg.what = PROBLEM;
+                            e.printStackTrace();
+                        } finally {
+                            post.abort();
+                            mHandler.sendMessage(msg);
+                        }
+                    }
+                }
+        ).start();
+    }
+
+    private void restart(String sqh){//重新答题
+        showMyProgressDialog(getActivity());
+        final HttpClient client = new DefaultHttpClient();
+        String strhttp = MyOkHttpUtils.BaseUrl + "/Json/Set_Qa_Receiv_Special.aspx?SQH=" + sqh + "&master_id=1&del=true&Receiv_id=all";
+        Log.e("2018-1-23", "重新答题url" + strhttp);
+        final String finalStrhttp = strhttp;
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        String cookies = SharedPreferencesUtils.getString("cookies");
+                        HttpPost post = new HttpPost(finalStrhttp);
+                        Message msg = Message.obtain();
+                        try {
+                            post.setHeader("cookie", cookies);
+                            HttpResponse response = client.execute(post);
+                            Log.e("2018-1-23", "提交响应码" + response.getStatusLine().getStatusCode());
+                            HttpEntity entity = response.getEntity();
+                            //EntityUtils中的toString()方法转换服务器的响应数据
+                            final String str = EntityUtils.toString(entity, "utf-8");
+                            if(TextUtils.equals("True",str)){
+                                InvestJbzd.list.clear();
+                                delList.clear();
+                                Log.e("2018-1-23", "SUCCEED_RESTARTstr" + str);
+                                msg.what = SUCCEED_RESTART;
+                            }
+                        } catch (Exception e) {
+                            msg.what = PROBLEM;
+                            e.printStackTrace();
+                        } finally {
+                            post.abort();
+                            mHandler.sendMessage(msg);
+                        }
+                    }
+                }
+        ).start();
+    }
+
+
+
+    private int getParentId(int dID){//获得最父一级的ID
+        int Pid=0;
+        List<InvestInfo> twoList=new ArrayList<>();
+        List<InvestInfo> threeList=new ArrayList<>();
+        for(com.youli.oldageassess.entity.InvestInfo list: PersonListActivity.investInfo){
+            if(dID==list.getID()&&list.getPARENT_ID()==0){//一级的
+                return dID;
+            }
+               if(dID==list.getID()&&list.getPARENT_ID()!=0){
+                   twoList.add(list);
+            }
+        }
+        for(com.youli.oldageassess.entity.InvestInfo list: PersonListActivity.investInfo) {
+            for (com.youli.oldageassess.entity.InvestInfo tlist : twoList) {
+                if(tlist.getPARENT_ID()==list.getID()&&list.getPARENT_ID()==0){
+                    return list.getID();
+                }
+                if(tlist.getPARENT_ID()==list.getID()&&list.getPARENT_ID()!=0){
+                    threeList.add(list);
+                }
+            }
+        }
+        for(com.youli.oldageassess.entity.InvestInfo list: PersonListActivity.investInfo) {
+            for (com.youli.oldageassess.entity.InvestInfo tlist : threeList) {
+                if(tlist.getPARENT_ID()==list.getID()&&list.getPARENT_ID()==0){
+                    return list.getID();
+                }
+            }
+        }
+        return Pid;
     }
 
 }

@@ -8,4 +8,5 @@
     <string name="soft_update_later">以后更新</string>
     <string name="soft_updating">版本更新</string>
     <string name="soft_update_cancel">取消</string>
+    <string name="jw">居委</string>
 </resources>

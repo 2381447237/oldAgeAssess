@@ -14,20 +14,20 @@ public class AdminInfo implements Serializable{
 
 
     /**
-     * ID : 1
-     * NAME : admin
-     * INPUT_CODE : admin
-     * PWD : T3RFK3hyUWhnV2M9
-     * PHONE : 13811111111
+     * ID : 2
+     * NAME : 黄涤非
+     * INPUT_CODE : 801170
+     * PWD : WnllRjkwRXZyYW89
+     * PHONE :
      * EMAIL :
      * PHOTO : null
-     * CREATE_DATE : 2017-01-01T00:00:00
+     * CREATE_DATE : 2018-01-20T15:37:24.467
      * CREATE_STAFF : 1
-     * UPDATE_DATE : 2018-01-22T10:35:16.593
+     * UPDATE_DATE : 2018-01-24T09:43:17.023
      * UPDATE_STAFF : 1
      * STOP : false
-     * DEVICE_NUMBER : A类
-     * SFZ : 4tte
+     * PASS_TYPE : A类
+     * SFZ :
      * DEPT : 静安区石门二路街道居家养老服务中心
      * JD : 静安区
      * IMEI :
@@ -48,7 +48,7 @@ public class AdminInfo implements Serializable{
     private String UPDATE_DATE;
     private int UPDATE_STAFF;
     private boolean STOP;
-    private String DEVICE_NUMBER;
+    private String PASS_TYPE;
     private String SFZ;
     private String DEPT;
     private String JD;
@@ -153,12 +153,12 @@ public class AdminInfo implements Serializable{
         this.STOP = STOP;
     }
 
-    public String getDEVICE_NUMBER() {
-        return DEVICE_NUMBER;
+    public String getPASS_TYPE() {
+        return PASS_TYPE;
     }
 
-    public void setDEVICE_NUMBER(String DEVICE_NUMBER) {
-        this.DEVICE_NUMBER = DEVICE_NUMBER;
+    public void setPASS_TYPE(String PASS_TYPE) {
+        this.PASS_TYPE = PASS_TYPE;
     }
 
     public String getSFZ() {
